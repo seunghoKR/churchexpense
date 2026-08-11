@@ -286,7 +286,7 @@
         <!-- 4. 📋 재정부 전용 지출요청 심사 & 스마트 2대 버튼 목록 -->
         <div id="section-admin" style="display:none;">
             <div class="card">
-                <!-- 🔘 상단 2대 핵심 버튼 (🖨️ 목록 인쇄 vs 💸 집행완료 확정) -->
+                <!-- 🔘 상단 2대 핵심 버튼 -->
                 <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
                     <span>📋 지출요청 심사 & 집행 목록</span>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -332,10 +332,10 @@
                     <!-- 요청 카드 #2 -->
                     <div class="request-summary-card" style="display:flex; gap:10px; align-items:flex-start;">
                         <input type="checkbox" class="chk-item-batch" value="EXP-202608-0002" data-amount="120000" data-status="APPROVED" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
-                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0002', '주일학교 주일과별 교재 구입', '120,000 원', '주일학교', '이성도 집사', 'APPROVED', '농협 351-9988-7766 (예금주: 이성도)')">
+                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0002', '주일학교 주일과별 교재 구입', '120,000 원', '주일학교', '이성도 집사', 'PENDING', '농협 351-9988-7766 (예금주: 이성도)')">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:700; color:var(--primary-color);">EXP-202608-0002</span>
-                                <span class="status-badge status-APPROVED" id="badge-EXP-202608-0002" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">👍 승인 완료 (집행대기)</span>
+                                <span class="status-badge status-PENDING" id="badge-EXP-202608-0002" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">⏳ 승인 대기</span>
                             </div>
                             <div style="font-weight:bold; font-size:15px; margin-top:4px;">주일학교 주일과별 교재 구입</div>
                             <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 이성도 집사 | 금액: 120,000 원 | 계좌: 농협 351-9988-7766</div>
@@ -355,11 +355,11 @@
 
     </div>
 
-    <!-- 🔍 재정부 상세 심사 모달 (Detail Review Modal) -->
+    <!-- 🔍 재정부 상세 모달 (Detail Modal) -->
     <div id="detail-review-modal" class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="m-modal-title">📌 지출요청 상세 심사 (EXP-202608-0001)</h3>
+                <h3 id="m-modal-title">📌 지출요청 세부내용 (EXP-202608-0001)</h3>
                 <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
             </div>
 
@@ -382,26 +382,32 @@
                     </tbody>
                 </table>
 
-                <div style="font-weight:700; color:#334155; margin-bottom:6px;">🖼️ 영수증 / 증빙 사진:</div>
-                <div id="m-receipt-gallery" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
-                    <div style="background:#e2e8f0; border-radius:8px; padding:12px; text-align:center; font-size:12.5px; color:#64748b; width:100%;">
-                        🖼️ 등록된 영수증 사진 1장이 첨부되어 있습니다. (터치 시 크게 보기)
-                    </div>
+                <div style="font-weight:700; color:#334155; margin-bottom:6px;">🖼️ 영수증 / 증빙 사진 미리보기:</div>
+                <!-- 🖼️ 영수증 썸네일 미리보기 갤러리 -->
+                <div id="m-receipt-gallery" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                    <img src="images/logo.png" alt="영수증 썸네일" class="modal-receipt-thumb" onclick="alert('📸 영수증 원본 사진을 확대하여 미리봅니다.')" title="터치 시 원본 사진 확대 보기">
                 </div>
 
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label style="font-weight:700;">재정부 심사 메모 / 반려 사유 (선택)</label>
-                    <input type="text" id="m-review-memo" class="form-control" placeholder="예: 영수증 확인 완료 및 적격 승인">
+                <div class="form-group" style="margin-bottom:14px;" id="m-memo-group">
+                    <label style="font-weight:700;">재정부 메모 / 반려 사유 (선택)</label>
+                    <input type="text" id="m-review-memo" class="form-control" placeholder="예: 영수증 적격 확인 완료">
                 </div>
             </div>
 
-            <!-- 승인 / 반려 처리 버튼 구획 -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <!-- 🔘 승인 / 반려 2자 단정 처리 버튼 구획 (집행완료/완료건 조건부 숨김) -->
+            <div id="m-action-btn-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <button type="button" class="btn-primary-lg" style="background:#ef4444; font-size:15px; padding:12px;" onclick="processApproval('REJECTED')">
-                    ❌ 반려 처리
+                    ❌ 반려
                 </button>
                 <button type="button" class="btn-primary-lg" style="background:#059669; font-size:15px; padding:12px;" onclick="processApproval('APPROVED')">
-                    ✅ 승인 처리
+                    ✅ 승인
+                </button>
+            </div>
+
+            <!-- 집행 완료건 전용 닫기 버튼 -->
+            <div id="m-close-only-group" style="display:none; margin-top:10px;">
+                <button type="button" class="btn-primary-lg" style="background:#475569; font-size:15px; padding:12px;" onclick="closeModal()">
+                    🚪 닫기
                 </button>
             </div>
         </div>
@@ -416,6 +422,7 @@
         let selectedTheme = 'green';
         let itemCardCount = 1;
         let activeReqId = null;
+        let activeReqStatus = null;
         let isBatchModeActive = false;
 
         function showTab(tabName) {
@@ -430,7 +437,7 @@
             });
         }
 
-        // 🔘 '집행완료 확정' 클릭 시 체크박스 모드 스르륵 토글 렌더링!
+        // 🔘 '집행완료 확정' 클릭 시 체크박스 모드 토글!
         function toggleBatchMode(forceState) {
             if (forceState !== undefined) {
                 isBatchModeActive = forceState;
@@ -461,12 +468,14 @@
             }
         }
 
-        // 🔍 세부내용 상세 심사 모달 열기
+        // 🔍 세부내용 상세 모달 열기 (집행 완료건 승인/반려 버튼 조건부 숨김!)
         function openDetailModal(reqId, purpose, totalAmount, dept, applicant, status, accountInfo) {
-            if (isBatchModeActive) return; // 체크박스 선택 중일 땐 모달 팝업 안 띄움!
+            if (isBatchModeActive) return; // 체크박스 모드일 땐 모달 팝업 안 띄움
 
             activeReqId = reqId;
-            document.getElementById('m-modal-title').textContent = '📌 지출요청 상세 심사 (' + reqId + ')';
+            activeReqStatus = status;
+
+            document.getElementById('m-modal-title').textContent = '📌 지출요청 세부내용 (' + reqId + ')';
             document.getElementById('m-purpose-text').textContent = purpose;
             document.getElementById('m-dept-text').textContent = dept;
             document.getElementById('m-applicant-text').textContent = applicant;
@@ -476,6 +485,21 @@
             const stBadge = document.getElementById('m-status-text');
             if (stBadge) {
                 stBadge.textContent = getStatusLabel(status);
+            }
+
+            // 🔒 집행 완료건(PAID) 또는 이미 반려건(REJECTED)은 [반려/승인] 버튼을 감추고 [닫기] 버튼만 표시!
+            const actionGroup = document.getElementById('m-action-btn-group');
+            const closeGroup = document.getElementById('m-close-only-group');
+            const memoGroup = document.getElementById('m-memo-group');
+
+            if (status === 'PAID' || status === 'REJECTED') {
+                if (actionGroup) actionGroup.style.display = 'none';
+                if (closeGroup) closeGroup.style.display = 'block';
+                if (memoGroup) memoGroup.style.display = 'none';
+            } else {
+                if (actionGroup) actionGroup.style.display = 'grid';
+                if (closeGroup) closeGroup.style.display = 'none';
+                if (memoGroup) memoGroup.style.display = 'block';
             }
 
             document.getElementById('detail-review-modal').classList.add('active');
@@ -495,11 +519,10 @@
             }
         }
 
-        // ✅ 승인 또는 ❌ 반려 처리 스크립트
+        // ✅ 승인 또는 ❌ 반려 처리 스크립트 (2자 버튼)
         function processApproval(targetStatus) {
             if (!activeReqId) return;
 
-            const memo = document.getElementById('m-review-memo').value;
             const badge = document.getElementById('badge-' + activeReqId);
 
             if (targetStatus === 'APPROVED') {
@@ -508,21 +531,21 @@
                     badge.style.cssText = 'background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
                     badge.textContent = '👍 승인 완료 (집행대기)';
                 }
-                alert('🎉 [' + activeReqId + '] 지출요청건이 [승인 완료] 처리되었습니다!\n지출요청 목록으로 복귀합니다.');
+                alert('🎉 [' + activeReqId + '] 지출요청건이 [승인] 처리되었습니다!\n목록으로 복귀합니다.');
             } else if (targetStatus === 'REJECTED') {
                 if (badge) {
                     badge.className = 'status-badge status-REJECTED';
                     badge.style.cssText = 'background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
                     badge.textContent = '❌ 반려됨';
                 }
-                alert('❌ [' + activeReqId + '] 지출요청건이 반려 처리되었습니다.\n지출요청 목록으로 복귀합니다.');
+                alert('❌ [' + activeReqId + '] 지출요청건이 [반려] 처리되었습니다.\n목록으로 복귀합니다.');
             }
 
             closeModal();
             calcSelectedBatchTotal();
         }
 
-        // 💸 스마트 다중 선택 일괄 집행 완료 (Batch Payment System)
+        // 💸 스마트 다중 선택 일괄 집행 완료
         function toggleSelectAll(chkAll) {
             const items = document.querySelectorAll('.chk-item-batch');
             items.forEach(chk => chk.checked = chkAll.checked);

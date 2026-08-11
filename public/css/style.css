@@ -457,7 +457,7 @@ button.tab-btn.active,
     font-size: 13.5px;
 }
 
-/* 🔍 재정부 상세 심사 모달 (Modal) CSS */
+/* 🔍 재정부 상세 모달 (Modal) & 영수증 썸네일 미리보기 CSS */
 .modal-backdrop {
     display: none;
     position: fixed;
@@ -515,6 +515,23 @@ button.tab-btn.active,
     height: 32px;
     border-radius: 50%;
     cursor: pointer;
+}
+
+/* 🖼️ 실제 영수증 썸네일 미리보기 CSS */
+.modal-receipt-thumb {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.modal-receipt-thumb:hover {
+    transform: scale(1.06);
+    border-color: var(--primary-color);
 }
 
 /* 💸 스마트 일괄 집행 바 & 체크박스 토글 CSS */
