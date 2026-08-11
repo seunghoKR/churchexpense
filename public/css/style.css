@@ -436,25 +436,33 @@ button.tab-btn.active,
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
+/* 👤 회원관리 테이블 모바일 줄바꿈 방지 & 너비 최적화 CSS */
 .admin-user-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 8px;
+    table-layout: fixed;
 }
 
 .admin-user-table th {
     background-color: #f1f5f9;
     color: #475569;
-    font-size: 12.5px;
-    padding: 8px 6px;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 8px 3px;
     border-bottom: 1.5px solid #cbd5e1;
-    text-align: left;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .admin-user-table td {
-    padding: 8px 4px;
+    padding: 9px 3px;
     border-bottom: 1px solid #e2e8f0;
     font-size: 13.5px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 👑 관리자 전용 부서/직분 태그 칩 CSS */
