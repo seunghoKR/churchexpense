@@ -1,0 +1,681 @@
+/* 세종새누리교회 스마트 재정행정시스템 - Balanced Style System (UTF-8) */
+
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --primary-color: #54824e;       /* 세종새누리교회 심볼 딥 그린 (기본) */
+    --primary-hover: #436a3e;
+    --accent-color: #059669;        
+    --accent-yellow: #f59e0b;       
+    --kakao-yellow: #fee500;
+    --kakao-text: #191919;
+    --bg-color: #f4f7f4;
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #cbd5e1;
+    --input-focus: #54824e;
+    --radius: 10px;
+    --shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+    --font-main: 'Noto Sans KR', sans-serif;
+}
+
+[data-theme="blue"] {
+    --primary-color: #1e3a8a;
+    --primary-hover: #1d4ed8;
+    --input-focus: #2563eb;
+    --bg-color: #f0f4f9;
+}
+
+[data-theme="purple"] {
+    --primary-color: #6b21a8;
+    --primary-hover: #581c87;
+    --input-focus: #7c3aed;
+    --bg-color: #f6f0f9;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-main);
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-size: 14.5px;
+    line-height: 1.45;
+    padding-bottom: 50px;
+}
+
+/* 🔑 랜딩 / 로그인 전용 명품 디자인 CSS */
+.landing-box {
+    max-width: 440px;
+    margin: 40px auto;
+    padding: 24px 20px;
+    text-align: center;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.landing-logo-img {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.btn-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px;
+    font-size: 15.5px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease;
+}
+
+.btn-social:active {
+    transform: scale(0.98);
+}
+
+.btn-kakao {
+    background-color: var(--kakao-yellow);
+    color: var(--kakao-text);
+}
+
+.btn-google {
+    background-color: #ffffff;
+    color: #374151;
+    border: 1.5px solid #d1d5db;
+}
+
+.auto-login-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.auto-login-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+/* 상단 헤더 */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    color: white;
+    padding: 12px 14px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 12px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border: 1px solid #e2e8f0;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1.5px solid #f0fdf4;
+    padding-bottom: 7px;
+}
+
+/* 🎨 마이페이지 테마 선택 카드 스타일 */
+.theme-picker-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.theme-card-option {
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    background: #ffffff;
+    transition: all 0.2s;
+}
+
+.theme-card-option.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(84, 130, 78, 0.2);
+}
+
+.theme-color-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin: 0 auto 6px;
+}
+
+/* 👴 3단계 위자드 스테퍼 */
+.wizard-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+.stepper-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.stepper-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 4px;
+    transition: all 0.25s ease;
+}
+
+.stepper-step.active .stepper-num {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(84, 130, 78, 0.2);
+}
+
+.stepper-step.completed .stepper-num {
+    background-color: var(--accent-color);
+}
+
+.stepper-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.stepper-step.active .stepper-label {
+    color: var(--primary-color);
+}
+
+.wizard-btn-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.btn-wizard-next {
+    flex: 2;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.btn-wizard-prev {
+    flex: 1;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #475569;
+    background-color: #e2e8f0;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.form-group label .required {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 9px 11px;
+    font-size: 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    background-color: #fff;
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px rgba(84, 130, 78, 0.15);
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.items-table th {
+    background-color: #f1f5f9;
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 8px 5px;
+    text-align: left;
+    border-bottom: 1.5px solid #cbd5e1;
+}
+
+.items-table td {
+    padding: 5px 3px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.items-table input {
+    padding: 8px 6px;
+    font-size: 13.5px;
+}
+
+.btn-danger-sm {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.total-banner {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: right;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-top: 8px;
+}
+
+.btn-secondary-sm {
+    background-color: #e2e8f0;
+    color: #334155;
+    border: none;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.receipt-upload-box {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 14px 10px;
+    text-align: center;
+    background-color: #f8fafc;
+    cursor: pointer;
+}
+
+.btn-primary-lg {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+/* 🎯 탭 스타일 및 활성 탭 글자 시인성 100% 보정! */
+.tab-group {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border: 1.5px solid var(--border-color);
+    background-color: #fff;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    letter-spacing: -0.4px;
+}
+
+.tab-btn.active, 
+button.tab-btn.active, 
+#tab-mypage-btn.active {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+}
+
+.request-summary-card {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.request-summary-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.admin-user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.admin-user-table th {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-size: 12.5px;
+    padding: 8px 6px;
+    border-bottom: 1.5px solid #cbd5e1;
+    text-align: left;
+}
+
+.admin-user-table td {
+    padding: 8px 4px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13.5px;
+}
+
+/* 🔍 재정부 상세 심사 모달 (Modal) CSS */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 14px;
+}
+
+.modal-backdrop.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    border: 1px solid #e2e8f0;
+    position: relative;
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+}
+
+.modal-header h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.modal-close-btn {
+    background: #f1f5f9;
+    border: none;
+    font-size: 16px;
+    font-weight: 800;
+    color: #64748b;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* 💸 스마트 일괄 집행 바 & 체크박스 토글 CSS */
+.batch-bar-container {
+    display: none;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    animation: fadeInDown 0.25s ease;
+}
+
+.batch-bar-container.active {
+    display: flex;
+}
+
+.chk-item-batch {
+    display: none;
+}
+
+.chk-item-batch.active {
+    display: block;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#print-report-container {
+    display: none;
+}
+
+/* 🖨️ 재정부 지출요청 총괄집계표 전용 인쇄/PDF 최적화 CSS (@media print) */
+@media print {
+    body {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .app-header, .container, .tab-group, .card, button, header, .modal-backdrop {
+        display: none !important;
+    }
+
+    #print-report-container {
+        display: block !important;
+        padding: 24px 28px;
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    /* 상단 헤더: 타이틀과 결재란 겹침 완전 방지 Flex 구조 */
+    .print-header-top-clean {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+    }
+
+    .print-title-area h1 {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+
+    .print-title-area p {
+        font-size: 12.5px;
+        color: #64748b;
+    }
+
+    /* 3단계 결재란 표 (괄호 문구 완전히 뺀 깔끔 서명 칸) */
+    .print-approval-table-clean {
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+    .print-approval-table-clean th, 
+    .print-approval-table-clean td {
+        border: 1.5px solid #334155;
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+
+    .print-approval-table-clean th {
+        background-color: #f1f5f9 !important;
+        font-weight: 700;
+    }
+
+    .print-approval-box-cell {
+        height: 52px;
+        width: 60px;
+    }
+
+    /* 💙 블루 포인트 건명 바 */
+    .print-blue-title-bar {
+        background-color: #eff6ff !important;
+        border-left: 5px solid #2563eb !important;
+        padding: 10px 14px;
+        font-size: 14.5px;
+        font-weight: 800;
+        color: #1e3a8a;
+        margin-bottom: 18px;
+        border-radius: 4px;
+    }
+
+    /* 멀티 지출요청 총괄 집계표 테이블 */
+    .print-items-grid-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    .print-items-grid-table th {
+        background-color: #f8fafc !important;
+        color: #334155;
+        font-size: 12.5px;
+        font-weight: 700;
+        padding: 9px 6px;
+        border-top: 1.5px solid #334155;
+        border-bottom: 1.5px solid #cbd5e1;
+        text-align: center;
+    }
+
+    .print-items-grid-table td {
+        padding: 10px 6px;
+        font-size: 12.5px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* 💰 총 지출 집행 합계금 파란색 하이라이트 박스 */
+    .print-total-blue-box {
+        background-color: #f8fafc !important;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 14px 18px;
+        text-align: right;
+        margin-bottom: 28px;
+    }
+
+    .print-total-amount-highlight {
+        font-size: 21px;
+        font-weight: 800;
+        color: #2563eb !important;
+        margin-left: 10px;
+    }
+
+    .print-church-stamp-footer {
+        margin-top: 50px;
+        text-align: center;
+        font-size: 15.5px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+}

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="green">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>세종새누리교회 비용지출요청</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- 🌿 깔끔하고 맑은 상단 헤더 -->
+    <header class="app-header" style="padding: 10px 14px;">
+        <div style="display:flex; align-items:center;">
+            <img src="images/logo.png" alt="기독교한국침례회 세종새누리교회" style="height:46px; border:none; background:transparent; box-shadow:none; border-radius:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15));">
+        </div>
+        <button onclick="closeOrExit()" style="background:rgba(255,255,255,0.22); color:#fff; border:1px solid rgba(255,255,255,0.5); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">
+            🚪 화면닫기
+        </button>
+    </header>
+
+    <div class="container">
+
+        <!-- 🛠️ 로그인 상태 정보 및 테스트용 툴바 -->
+        <div class="card" style="padding: 12px; margin-bottom: 12px; background-color: #f0fdf4; border-color: #bbf7d0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <div>
+                    <strong>👤 현재 접속:</strong> 
+                    <span id="user-name-display" style="color:#047857; font-weight:700;">김성도 집사님</span>
+                    <span id="user-role-badge" style="font-size:13px; color:#6b7280; font-weight:bold;">(신청자)</span>
+                </div>
+                <div style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <button onclick="switchRole('APPLICANT', '김성도 집사님 (청년부)')" class="btn-role-switch" style="color:#2563eb;">[신청자 모드]</button>
+                    <button onclick="switchRole('TREASURER', '이재정 장로님 (재정부)')" class="btn-role-switch" style="color:#059669;">[재정부 모드]</button>
+                    <button onclick="switchRole('ADMIN', '최관리 목사님 (사이트 관리자)')" class="btn-role-switch" style="color:#7c3aed;">[👑 관리자 모드]</button>
+                    <button onclick="realLogout()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:3px 7px; border-radius:6px; font-weight:bold; cursor:pointer;">[🔒 로그아웃]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎯 상단 탭 메뉴 -->
+        <div class="tab-group" id="app-tab-group">
+            <button class="tab-btn active" id="tab-form-btn" onclick="showTab('form')">📝 요청서 작성</button>
+            <button class="tab-btn" id="tab-status-btn" onclick="showTab('status')">📋 진행 현황</button>
+            <button class="tab-btn" id="tab-admin-btn" onclick="showTab('admin')" style="display:none;">📋 지출요청 목록</button>
+            <button class="tab-btn" id="tab-site-admin-btn" onclick="showTab('site_admin')" style="display:none; border-color:#7c3aed; color:#7c3aed;">👑 관리자</button>
+            <button class="tab-btn" id="tab-mypage-btn" onclick="showTab('mypage')" style="border-color:#a7f3d0;">👤 마이페이지</button>
+        </div>
+
+        <!-- 1. 지출요청서 작성 Section -->
+        <div id="section-form">
+            <div id="wizard-form-container">
+                <div class="wizard-stepper" id="main-wizard-stepper">
+                    <div class="stepper-step active" id="st-step-1">
+                        <div class="stepper-num" id="st-num-1">1</div>
+                        <div class="stepper-label">부서 & 목적</div>
+                    </div>
+                    <div style="flex:0.5; height:2px; background:#cbd5e1; margin-bottom:14px;"></div>
+                    <div class="stepper-step" id="st-step-2">
+                        <div class="stepper-num" id="st-num-2">2</div>
+                        <div class="stepper-label">지출 세부 내역</div>
+                    </div>
+                    <div style="flex:0.5; height:2px; background:#cbd5e1; margin-bottom:14px;"></div>
+                    <div class="stepper-step" id="st-step-3">
+                        <div class="stepper-num" id="st-num-3">3</div>
+                        <div class="stepper-label">계좌 & 영수증</div>
+                    </div>
+                </div>
+
+                <form id="expense-submit-form" onsubmit="event.preventDefault(); alert('🎉 지출요청서가 정상 제출되었습니다!'); showTab('status');">
+                    <!-- Step 1: 부서 및 목적 -->
+                    <div id="w-step-1-panel" class="card" style="display:block;">
+                        <div class="card-title">📌 1단계: 부서 및 지출 목적 입력</div>
+                        <div class="form-group">
+                            <label>부서명 <span class="required">*</span></label>
+                            <select id="form-dept-select" class="form-control" style="font-size:15px; padding:11px;">
+                                <option value="청년부">청년부</option>
+                                <option value="주일학교">주일학교</option>
+                                <option value="방송실">방송실</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>지출목적 <span class="required">*</span></label>
+                            <input type="text" id="w-purpose-input" class="form-control" placeholder="예: 청년부 여름 수련회 물품 구매" style="font-size:15px; padding:11px;">
+                        </div>
+                        <div class="wizard-btn-group wizard-only-btn">
+                            <button type="button" class="btn-wizard-next" onclick="goToWizardStep(2)">
+                                다음 (지출내역) ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: 지출 내역 -->
+                    <div id="w-step-2-panel" class="card" style="display:none;">
+                        <div class="card-title">💵 2단계: 지출 세부 내역 및 비용 입력</div>
+                        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
+                            항목과 금액, 비고를 2줄 카드로 넓고 편리하게 입력하세요.
+                        </p>
+
+                        <div id="w-items-card-list">
+                            <div class="item-card-row" style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span style="font-size:13px; font-weight:800; color:var(--primary-color);">항목 #1</span>
+                                    <button type="button" class="btn-danger-sm" onclick="removeItemCard(this)">✕ 삭제</button>
+                                </div>
+                                <div class="form-group" style="margin-bottom:6px;">
+                                    <input type="text" class="form-control item-name-field" placeholder="예: 수련회 간식 (음료/과자)" style="font-size:14.5px; padding:9px;">
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                    <div>
+                                        <input type="number" class="form-control item-amount-field" placeholder="예: 85000" oninput="calcTotalAmount()" style="font-size:14px; padding:8px;">
+                                    </div>
+                                    <div>
+                                        <input type="text" class="form-control item-note-field" placeholder="예: 마트 결제" style="font-size:14px; padding:8px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-secondary-sm" onclick="addItemCard()" style="width:100%; padding:11px; font-size:14.5px; margin-bottom:10px; background:#e2e8f0; color:#334155;">
+                            ➕ 지출 항목 추가하기
+                        </button>
+
+                        <div class="total-banner">
+                            총 신청금액: <span id="w-total-amount-display">0 원</span>
+                        </div>
+
+                        <div class="wizard-btn-group wizard-only-btn">
+                            <button type="button" class="btn-wizard-prev" onclick="goToWizardStep(1)">⬅ 이전</button>
+                            <button type="button" class="btn-wizard-next" onclick="goToWizardStep(3)">
+                                다음 (영수증) ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: 계좌 및 영수증 -->
+                    <div id="w-step-3-panel" class="card" style="display:none;">
+                        <div class="card-title">💳 3단계: 입금 계좌 & 영수증 첨부</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label>계좌번호 <span class="required">*</span></label>
+                                <input type="text" id="form-account-input" class="form-control" placeholder="예: 351-1234-5678-00" style="padding:11px;">
+                            </div>
+                            <div class="form-group">
+                                <label>예금주 <span class="required">*</span></label>
+                                <input type="text" id="form-holder-input" class="form-control" placeholder="예: 홍길동" style="padding:11px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label>🖼️ 영수증 / 증빙 사진 첨부 (선택/필수)</label>
+                            <div class="receipt-upload-box" onclick="document.getElementById('receipt-input-w').click();" style="border:2px dashed #94a3b8; background:#f8fafc; padding:20px; border-radius:12px;">
+                                <div style="font-size:32px; margin-bottom:4px;">🖼️ 📸</div>
+                                <div style="font-weight:bold; font-size:15px; color:var(--primary-color);">터치하여 스마트폰 카메라 촬영 또는 영수증 사진 첨부</div>
+                                <div style="font-size:12.5px; color:#64748b; margin-top:2px;">(여러 장 선택 가능합니다)</div>
+                                <input type="file" id="receipt-input-w" accept="image/*" multiple style="display:none;" onchange="handleReceiptPreview(this)">
+                            </div>
+                            <div id="receipt-preview-container" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+                        </div>
+
+                        <div class="wizard-btn-group wizard-only-btn">
+                            <button type="button" class="btn-wizard-prev" onclick="goToWizardStep(2)">⬅ 이전</button>
+                            <button type="submit" class="btn-wizard-next" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); font-size:17px;">
+                                ✉️ 요청서 제출
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="onepage-submit-container" style="display:none; margin-top:14px;">
+                        <button type="submit" class="btn-primary-lg" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); font-size:18px; padding:16px;">
+                            ✉️ 요청서 제출
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. 📋 진행 현황 Section -->
+        <div id="section-status" style="display:none;">
+            <div class="card">
+                <div class="card-title">⚡ 최근 지출요청 진행 현황 (1개월 이내)</div>
+                <div style="border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; background:#fff;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-weight:700; font-size:14.5px; color:var(--primary-color);">EXP-202608-0001</span>
+                        <span class="status-badge status-PAID" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>
+                    </div>
+                    <h3 style="font-size:15.5px; font-weight:700; margin-bottom:4px;">청년부 여름 수련회 물품 구매</h3>
+                    <div style="font-size:13.5px; color:var(--text-secondary);">신청자: <strong>김성도 집사</strong> | 신청금액: <strong>85,000 원</strong> | 요청일: 2026-08-11</div>
+                </div>
+            </div>
+
+            <div class="card" style="border-top:3px solid #64748b;">
+                <div class="card-title" style="color:#334155;">📜 지난 지출 신청 이력 (집행완료 1개월 경과건)</div>
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
+                    집행이 확정되고 1개월이 지난 신청 내역은 간단 목록으로 안전하게 보관됩니다.
+                </p>
+                <table class="admin-user-table">
+                    <thead>
+                        <tr><th>집행일자</th><th>부서</th><th>지출 목적</th><th>금액</th><th>상태</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026-07-02</td>
+                            <td>청년부</td>
+                            <td>6월 청년부 정기모임 모임비</td>
+                            <td>45,000 원</td>
+                            <td><span style="color:#059669; font-weight:bold;">✅ 완료</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. 👤 마이페이지 Section -->
+        <div id="section-mypage" style="display:none;">
+            <div class="card" style="border-top:3px solid var(--primary-color);">
+                <div class="card-title" style="color:var(--primary-color);">👤 내 프로필 & 취향</div>
+                <div class="form-group">
+                    <label>성명 (SNS 로그인 정보 연동)</label>
+                    <input type="text" id="my-name-input" class="form-control" value="김성도" oninput="syncNameWithHolder(this.value)">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div class="form-group">
+                        <label>교회 직함 선택</label>
+                        <select id="my-title-select" class="form-control">
+                            <option value="성도">성도</option>
+                            <option value="집사" selected>집사</option>
+                            <option value="권사">권사</option>
+                            <option value="장로">장로</option>
+                            <option value="목사">목사</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>소속 부서 선택</label>
+                        <select id="my-dept-select" class="form-control">
+                            <option value="청년부" selected>청년부</option>
+                            <option value="주일학교">주일학교</option>
+                            <option value="방송실">방송실</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 자주 쓰는 환급 계좌 등록 -->
+            <div class="card" style="border-top:3px solid #059669;">
+                <div class="card-title" style="color:#047857;">💳 자주 쓰는 환급 계좌 미리 등록</div>
+                <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:6px;">
+                    <input type="text" id="my-bank-input" class="form-control" placeholder="은행명" value="농협">
+                    <input type="text" id="my-account-input" class="form-control" placeholder="계좌번호" value="351-1234-5678-00">
+                    <input type="text" id="my-holder-input" class="form-control" placeholder="예금주" value="김성도">
+                </div>
+            </div>
+
+            <!-- 🎨 테마 및 폼 스타일 선택기 -->
+            <div class="card" style="border-top:3px solid #7c3aed;">
+                <div class="card-title" style="color:#6b21a8;">🎨 나만의 선호 UI 스타일 & 테마 색상 선택</div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-weight:700;">기본 지출요청서 작성 폼 스타일 선택</label>
+                    <select id="my-mode-select" class="form-control" style="font-size:14.5px; padding:10px; border-color:#7c3aed;">
+                        <option value="wizard" selected>✨ 3단계 톡톡 위자드 모드 (기본)</option>
+                        <option value="onepage">📄 한눈에 보는 원페이지 스크롤 모드</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:700;">좋아하는 테마 컬러 선택</label>
+                    <div class="theme-picker-group">
+                        <div class="theme-card-option active" id="thm-opt-green" onclick="selectThemeOption('green')">
+                            <div class="theme-color-badge" style="background:#54824e;"></div>
+                            <div style="font-size:13px; font-weight:bold; color:#436a3e;">🌿 딥그린</div>
+                        </div>
+                        <div class="theme-card-option" id="thm-opt-blue" onclick="selectThemeOption('blue')">
+                            <div class="theme-color-badge" style="background:#1e3a8a;"></div>
+                            <div style="font-size:13px; font-weight:bold; color:#1e3a8a;">🔵 오션블루</div>
+                        </div>
+                        <div class="theme-card-option" id="thm-opt-purple" onclick="selectThemeOption('purple')">
+                            <div class="theme-color-badge" style="background:#6b21a8;"></div>
+                            <div style="font-size:13px; font-weight:bold; color:#6b21a8;">🟣 퍼플</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-primary-lg" style="margin-top:14px;" onclick="saveMyPageSettings()">
+                    💾 마이페이지 설정 저장하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. 📋 재정부 전용 지출요청 심사 & 스마트 2대 버튼 목록 -->
+        <div id="section-admin" style="display:none;">
+            <div class="card">
+                <!-- 🔘 상단 2대 핵심 버튼 (🖨️ 목록 인쇄 vs 💸 집행완료 확정) -->
+                <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+                    <span>📋 지출요청 심사 & 집행 목록</span>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn-secondary-sm" style="background:#1e293b; color:#ffffff; padding:7px 12px; font-size:13px; font-weight:bold; cursor:pointer;" onclick="printFullReport()">
+                            🖨️ 전체 목록 인쇄
+                        </button>
+                        <button type="button" id="btn-toggle-batch-mode" class="btn-secondary-sm" style="background:#2563eb; color:#ffffff; padding:7px 12px; font-size:13px; font-weight:bold; cursor:pointer;" onclick="toggleBatchMode()">
+                            💸 집행완료 확정
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 💸 스마트 집행완료 확정 툴바 (토글 시 등장!) -->
+                <div id="batch-action-bar" class="batch-bar-container">
+                    <label style="font-weight:700; font-size:13.5px; cursor:pointer; display:flex; align-items:center; gap:6px; color:#1e3a8a;">
+                        <input type="checkbox" id="chk-select-all" onchange="toggleSelectAll(this)" style="width:18px; height:18px; accent-color:#2563eb;">
+                        <span>☑️ 전체 선택</span>
+                    </label>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button type="button" id="btn-batch-pay" class="btn-primary-lg" onclick="processBatchPayment()" style="width:auto; padding:8px 14px; font-size:13px; background:linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);">
+                            💸 선택한 0건 (0원) 집행 완료
+                        </button>
+                        <button type="button" onclick="toggleBatchMode(false)" style="background:#cbd5e1; color:#334155; border:none; padding:8px 10px; border-radius:6px; font-size:12.5px; font-weight:bold; cursor:pointer;">
+                            취소
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="admin-request-cards-container">
+                    <!-- 요청 카드 #1 -->
+                    <div class="request-summary-card" style="margin-bottom:10px; display:flex; gap:10px; align-items:flex-start;">
+                        <input type="checkbox" class="chk-item-batch" value="EXP-202608-0001" data-amount="85000" data-status="PAID" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0001', '청년부 여름 수련회 물품 구매', '85,000 원', '청년부', '김성도 집사', 'PAID', '농협 351-1234-5678-00 (예금주: 김성도)')">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:700; color:var(--primary-color);">EXP-202608-0001</span>
+                                <span class="status-badge status-PAID" id="badge-EXP-202608-0001" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>
+                            </div>
+                            <div style="font-weight:bold; font-size:15px; margin-top:4px;">청년부 여름 수련회 물품 구매</div>
+                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 김성도 집사 | 금액: 85,000 원 | 계좌: 농협 351-1234-5678-00</div>
+                        </div>
+                    </div>
+
+                    <!-- 요청 카드 #2 -->
+                    <div class="request-summary-card" style="display:flex; gap:10px; align-items:flex-start;">
+                        <input type="checkbox" class="chk-item-batch" value="EXP-202608-0002" data-amount="120000" data-status="APPROVED" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0002', '주일학교 주일과별 교재 구입', '120,000 원', '주일학교', '이성도 집사', 'APPROVED', '농협 351-9988-7766 (예금주: 이성도)')">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:700; color:var(--primary-color);">EXP-202608-0002</span>
+                                <span class="status-badge status-APPROVED" id="badge-EXP-202608-0002" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">👍 승인 완료 (집행대기)</span>
+                            </div>
+                            <div style="font-weight:bold; font-size:15px; margin-top:4px;">주일학교 주일과별 교재 구입</div>
+                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 이성도 집사 | 금액: 120,000 원 | 계좌: 농협 351-9988-7766</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 👑 사이트 관리자 대시보드 Section -->
+        <div id="section-site_admin" style="display:none;">
+            <div class="card" style="border-top:3px solid #7c3aed;">
+                <div class="card-title" style="color:#6b21a8;">⚙️ 1. 부서 및 교회 직함 관리</div>
+                <p style="font-size:13px; color:var(--text-secondary);">사역 부서 및 직함을 자유롭게 생성/삭제 관리합니다.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🔍 재정부 상세 심사 모달 (Detail Review Modal) -->
+    <div id="detail-review-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="m-modal-title">📌 지출요청 상세 심사 (EXP-202608-0001)</h3>
+                <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
+            </div>
+
+            <div style="font-size:13.5px; line-height:1.6; margin-bottom:14px;">
+                <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
+                    <div><strong>요청 건명:</strong> <span id="m-purpose-text" style="font-weight:bold; color:var(--primary-color);">청년부 여름 수련회 물품 구매</span></div>
+                    <div><strong>신청 정보:</strong> <span id="m-dept-text">청년부</span> - <span id="m-applicant-text">김성도 집사</span></div>
+                    <div><strong>환급 계좌:</strong> <span id="m-account-text">농협 351-1234-5678-00 (예금주: 김성도)</span></div>
+                    <div><strong>신청 총액:</strong> <span id="m-amount-text" style="font-size:16px; font-weight:800; color:#2563eb;">85,000 원</span></div>
+                    <div><strong>현재 상태:</strong> <span id="m-status-text" class="status-badge">집행 완료</span></div>
+                </div>
+
+                <div style="font-weight:700; color:#334155; margin-bottom:6px;">💵 세부 지출 항목 명세:</div>
+                <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px; border:1px solid #cbd5e1;">
+                    <thead style="background:#f1f5f9;">
+                        <tr><th style="padding:6px; border:1px solid #cbd5e1;">항목명</th><th style="padding:6px; border:1px solid #cbd5e1;">금액</th><th style="padding:6px; border:1px solid #cbd5e1;">비고</th></tr>
+                    </thead>
+                    <tbody id="m-items-tbody">
+                        <tr><td style="padding:6px; border:1px solid #e2e8f0;">수련회 간식 (음료/과자)</td><td style="padding:6px; border:1px solid #e2e8f0; text-align:right;">85,000 원</td><td style="padding:6px; border:1px solid #e2e8f0;">마트 결제</td></tr>
+                    </tbody>
+                </table>
+
+                <div style="font-weight:700; color:#334155; margin-bottom:6px;">🖼️ 영수증 / 증빙 사진:</div>
+                <div id="m-receipt-gallery" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+                    <div style="background:#e2e8f0; border-radius:8px; padding:12px; text-align:center; font-size:12.5px; color:#64748b; width:100%;">
+                        🖼️ 등록된 영수증 사진 1장이 첨부되어 있습니다. (터치 시 크게 보기)
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-weight:700;">재정부 심사 메모 / 반려 사유 (선택)</label>
+                    <input type="text" id="m-review-memo" class="form-control" placeholder="예: 영수증 확인 완료 및 적격 승인">
+                </div>
+            </div>
+
+            <!-- 승인 / 반려 처리 버튼 구획 -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button type="button" class="btn-primary-lg" style="background:#ef4444; font-size:15px; padding:12px;" onclick="processApproval('REJECTED')">
+                    ❌ 반려 처리
+                </button>
+                <button type="button" class="btn-primary-lg" style="background:#059669; font-size:15px; padding:12px;" onclick="processApproval('APPROVED')">
+                    ✅ 승인 처리
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🖨️ 재정부 지출요청 총괄집계표 전용 인쇄/PDF 숨김 구획 -->
+    <div id="print-report-container"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentRole = 'APPLICANT';
+        let selectedTheme = 'green';
+        let itemCardCount = 1;
+        let activeReqId = null;
+        let isBatchModeActive = false;
+
+        function showTab(tabName) {
+            ['form', 'status', 'admin', 'site_admin', 'mypage'].forEach(t => {
+                const sec = document.getElementById('section-' + t);
+                const btn = document.getElementById('tab-' + t + '-btn');
+                if (sec) sec.style.display = (t === tabName) ? 'block' : 'none';
+                if (btn) {
+                    if (t === tabName) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+        }
+
+        // 🔘 '집행완료 확정' 클릭 시 체크박스 모드 스르륵 토글 렌더링!
+        function toggleBatchMode(forceState) {
+            if (forceState !== undefined) {
+                isBatchModeActive = forceState;
+            } else {
+                isBatchModeActive = !isBatchModeActive;
+            }
+
+            const bar = document.getElementById('batch-action-bar');
+            const chks = document.querySelectorAll('.chk-item-batch');
+            const toggleBtn = document.getElementById('btn-toggle-batch-mode');
+
+            if (isBatchModeActive) {
+                if (bar) bar.classList.add('active');
+                chks.forEach(c => c.classList.add('active'));
+                if (toggleBtn) {
+                    toggleBtn.style.background = '#475569';
+                    toggleBtn.textContent = '❌ 확정 모드 닫기';
+                }
+            } else {
+                if (bar) bar.classList.remove('active');
+                chks.forEach(c => c.classList.remove('active'));
+                if (toggleBtn) {
+                    toggleBtn.style.background = '#2563eb';
+                    toggleBtn.textContent = '💸 집행완료 확정';
+                }
+                document.getElementById('chk-select-all').checked = false;
+                toggleSelectAll({ checked: false });
+            }
+        }
+
+        // 🔍 세부내용 상세 심사 모달 열기
+        function openDetailModal(reqId, purpose, totalAmount, dept, applicant, status, accountInfo) {
+            if (isBatchModeActive) return; // 체크박스 선택 중일 땐 모달 팝업 안 띄움!
+
+            activeReqId = reqId;
+            document.getElementById('m-modal-title').textContent = '📌 지출요청 상세 심사 (' + reqId + ')';
+            document.getElementById('m-purpose-text').textContent = purpose;
+            document.getElementById('m-dept-text').textContent = dept;
+            document.getElementById('m-applicant-text').textContent = applicant;
+            document.getElementById('m-account-text').textContent = accountInfo;
+            document.getElementById('m-amount-text').textContent = totalAmount;
+            
+            const stBadge = document.getElementById('m-status-text');
+            if (stBadge) {
+                stBadge.textContent = getStatusLabel(status);
+            }
+
+            document.getElementById('detail-review-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-review-modal').classList.remove('active');
+        }
+
+        function getStatusLabel(st) {
+            switch(st) {
+                case 'PAID': return '✅ 집행 완료';
+                case 'APPROVED': return '👍 승인 완료 (집행대기)';
+                case 'PENDING': return '⏳ 승인 대기';
+                case 'REJECTED': return '❌ 반려됨';
+                default: return st;
+            }
+        }
+
+        // ✅ 승인 또는 ❌ 반려 처리 스크립트
+        function processApproval(targetStatus) {
+            if (!activeReqId) return;
+
+            const memo = document.getElementById('m-review-memo').value;
+            const badge = document.getElementById('badge-' + activeReqId);
+
+            if (targetStatus === 'APPROVED') {
+                if (badge) {
+                    badge.className = 'status-badge status-APPROVED';
+                    badge.style.cssText = 'background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
+                    badge.textContent = '👍 승인 완료 (집행대기)';
+                }
+                alert('🎉 [' + activeReqId + '] 지출요청건이 [승인 완료] 처리되었습니다!\n지출요청 목록으로 복귀합니다.');
+            } else if (targetStatus === 'REJECTED') {
+                if (badge) {
+                    badge.className = 'status-badge status-REJECTED';
+                    badge.style.cssText = 'background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
+                    badge.textContent = '❌ 반려됨';
+                }
+                alert('❌ [' + activeReqId + '] 지출요청건이 반려 처리되었습니다.\n지출요청 목록으로 복귀합니다.');
+            }
+
+            closeModal();
+            calcSelectedBatchTotal();
+        }
+
+        // 💸 스마트 다중 선택 일괄 집행 완료 (Batch Payment System)
+        function toggleSelectAll(chkAll) {
+            const items = document.querySelectorAll('.chk-item-batch');
+            items.forEach(chk => chk.checked = chkAll.checked);
+            calcSelectedBatchTotal();
+        }
+
+        function calcSelectedBatchTotal() {
+            const items = document.querySelectorAll('.chk-item-batch:checked');
+            let count = 0;
+            let totalSum = 0;
+
+            items.forEach(chk => {
+                count++;
+                totalSum += parseInt(chk.getAttribute('data-amount')) || 0;
+            });
+
+            const btn = document.getElementById('btn-batch-pay');
+            if (btn) {
+                btn.textContent = '💸 선택한 ' + count + '건 (' + totalSum.toLocaleString() + '원) 집행 완료';
+            }
+        }
+
+        function processBatchPayment() {
+            const items = document.querySelectorAll('.chk-item-batch:checked');
+            if (items.length === 0) {
+                alert('⚠️ 일괄 집행 완료 처리할 지출요청건을 먼저 체크박스로 선택해 주세요!');
+                return;
+            }
+
+            let totalSum = 0;
+            let reqIds = [];
+            items.forEach(chk => {
+                reqIds.push(chk.value);
+                totalSum += parseInt(chk.getAttribute('data-amount')) || 0;
+            });
+
+            if (confirm('💸 선택하신 총 ' + items.length + '건 (총 ' + totalSum.toLocaleString() + '원)의 요청서를 [일괄 집행 완료] 처리하시겠습니까?')) {
+                reqIds.forEach(id => {
+                    const badge = document.getElementById('badge-' + id);
+                    if (badge) {
+                        badge.className = 'status-badge status-PAID';
+                        badge.style.cssText = 'background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
+                        badge.textContent = '✅ 집행 완료';
+                    }
+                });
+
+                alert('🎉 [일괄 집행 완료 처리 완료!]\n\n' +
+                      '• 선택 건수: 총 ' + items.length + '건\n' +
+                      '• 집행 총액: ' + totalSum.toLocaleString() + ' 원\n\n' +
+                      '인터넷 뱅킹 환급 집행이 정상 완료되었습니다!');
+
+                toggleBatchMode(false);
+            }
+        }
+
+        // 📊 재정부 멀티 지출요청 총괄 집계표 인쇄 스크립트!
+        function printFullReport() {
+            const printBox = document.getElementById('print-report-container');
+            const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            printBox.innerHTML = `
+                <div class="print-header-top-clean">
+                    <div class="print-title-area">
+                        <h1>세종새누리교회 비용지출 결의 총괄표</h1>
+                        <p>출력 일자: ${today} | 담당 부서: 재정부</p>
+                    </div>
+
+                    <table class="print-approval-table-clean">
+                        <tr>
+                            <th>작 성</th>
+                            <th>검 토</th>
+                            <th>승 인</th>
+                        </tr>
+                        <tr>
+                            <td class="print-approval-box-cell"></td>
+                            <td class="print-approval-box-cell"></td>
+                            <td class="print-approval-box-cell"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="print-blue-title-bar">
+                    ┃ 총괄 건명: 세종새누리교회 비용 지출 및 환급 집행 결의 건
+                </div>
+
+                <table class="print-items-grid-table">
+                    <thead>
+                        <tr>
+                            <th style="width:5%;">NO</th>
+                            <th style="width:14%;">요청번호</th>
+                            <th style="width:10%;">부서</th>
+                            <th style="width:11%;">신청자</th>
+                            <th style="width:25%;">지출 목적 (건명)</th>
+                            <th style="width:23%;">환급 계좌 정보</th>
+                            <th style="width:12%;">금액 (원)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center;">1</td>
+                            <td style="text-align:center; font-weight:700;">EXP-202608-0001</td>
+                            <td style="text-align:center;">청년부</td>
+                            <td style="text-align:center;">김성도 집사</td>
+                            <td>청년부 여름 수련회 물품 구매</td>
+                            <td>농협 351-1234-5678-00 (김성도)</td>
+                            <td style="text-align:right; font-weight:700;">85,000</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;">2</td>
+                            <td style="text-align:center; font-weight:700;">EXP-202608-0002</td>
+                            <td style="text-align:center;">주일학교</td>
+                            <td style="text-align:center;">이성도 집사</td>
+                            <td>주일학교 주일과별 교재 구입</td>
+                            <td>농협 351-9988-7766 (이성도)</td>
+                            <td style="text-align:right; font-weight:700;">120,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="print-total-blue-box">
+                    <span style="font-size:15px; font-weight:bold; color:#475569;">총 지출 집행 결의 합계금액:</span>
+                    <span class="print-total-amount-highlight">205,000 원</span>
+                </div>
+
+                <div class="print-church-stamp-footer">
+                    위와 같이 세종새누리교회 회계 규정에 따라 비용 지출 결의를 총괄 집행합니다.<br><br>
+                    <span style="font-size:17px; font-weight:800;">기독교한국침례회 세종새누리교회 재정부 (직인생략)</span>
+                </div>
+            `;
+
+            setTimeout(function() {
+                window.print();
+            }, 150);
+        }
+
+        function renderFormMode(mode) {
+            const stepper = document.getElementById('main-wizard-stepper');
+            const p1 = document.getElementById('w-step-1-panel');
+            const p2 = document.getElementById('w-step-2-panel');
+            const p3 = document.getElementById('w-step-3-panel');
+            const wizardBtns = document.querySelectorAll('.wizard-only-btn');
+            const onepageSubmitBtn = document.getElementById('onepage-submit-container');
+
+            if (mode === 'onepage') {
+                if (stepper) stepper.style.display = 'none';
+                if (p1) p1.style.display = 'block';
+                if (p2) p2.style.display = 'block';
+                if (p3) p3.style.display = 'block';
+                wizardBtns.forEach(btn => btn.style.display = 'none');
+                if (onepageSubmitBtn) onepageSubmitBtn.style.display = 'block';
+            } else {
+                if (stepper) stepper.style.display = 'flex';
+                goToWizardStep(1);
+                wizardBtns.forEach(btn => btn.style.display = 'flex');
+                if (onepageSubmitBtn) onepageSubmitBtn.style.display = 'none';
+            }
+        }
+
+        function goToWizardStep(targetStep) {
+            const p1 = document.getElementById('w-step-1-panel');
+            const p2 = document.getElementById('w-step-2-panel');
+            const p3 = document.getElementById('w-step-3-panel');
+
+            if (p1) p1.style.display = (targetStep === 1) ? 'block' : 'none';
+            if (p2) p2.style.display = (targetStep === 2) ? 'block' : 'none';
+            if (p3) p3.style.display = (targetStep === 3) ? 'block' : 'none';
+
+            [1, 2, 3].forEach(n => {
+                const st = document.getElementById('st-step-' + n);
+                if (st) {
+                    if (n === targetStep) {
+                        st.classList.add('active');
+                        st.classList.remove('completed');
+                    } else if (n < targetStep) {
+                        st.classList.remove('active');
+                        st.classList.add('completed');
+                    } else {
+                        st.classList.remove('active');
+                        st.classList.remove('completed');
+                    }
+                }
+            });
+
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        function addItemCard() {
+            itemCardCount++;
+            const container = document.getElementById('w-items-card-list');
+            const div = document.createElement('div');
+            div.className = 'item-card-row';
+            div.style.cssText = 'background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:13px; font-weight:800; color:var(--primary-color);">항목 #${itemCardCount}</span>
+                    <button type="button" class="btn-danger-sm" onclick="removeItemCard(this)">✕ 삭제</button>
+                </div>
+                <div class="form-group" style="margin-bottom:6px;">
+                    <input type="text" class="form-control item-name-field" placeholder="예: 수련회 간식 (음료/과자)" style="font-size:14.5px; padding:9px;">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div>
+                        <input type="number" class="form-control item-amount-field" placeholder="예: 85000" oninput="calcTotalAmount()" style="font-size:14px; padding:8px;">
+                    </div>
+                    <div>
+                        <input type="text" class="form-control item-note-field" placeholder="예: 마트 결제" style="font-size:14px; padding:8px;">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeItemCard(btn) {
+            const row = btn.closest('.item-card-row');
+            if (row) {
+                row.remove();
+                calcTotalAmount();
+            }
+        }
+
+        function calcTotalAmount() {
+            let total = 0;
+            const fields = document.querySelectorAll('.item-amount-field');
+            fields.forEach(f => {
+                const val = parseFloat(f.value) || 0;
+                total += val;
+            });
+            document.getElementById('w-total-amount-display').textContent = total.toLocaleString() + ' 원';
+        }
+
+        function handleReceiptPreview(input) {
+            const container = document.getElementById('receipt-preview-container');
+            container.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;';
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        function closeOrExit() {
+            if (confirm('🚪 화면을 닫고 세션을 유지하시겠습니까?\n(스마트폰 자동 로그인은 계속 유지됩니다)')) {
+                try { window.close(); } catch(e) {}
+                location.href = 'login.html';
+            }
+        }
+
+        function realLogout() {
+            if (confirm('🔒 정말 로그아웃 하시겠습니까?\n(자동 로그인 토큰이 삭제되어 다시 로그인해야 합니다)')) {
+                localStorage.removeItem('saenuri_auto_login');
+                location.href = 'login.html';
+            }
+        }
+
+        function syncNameWithHolder(newName) {
+            const holderInput = document.getElementById('my-holder-input');
+            const formHolderInput = document.getElementById('form-holder-input');
+            if (holderInput) holderInput.value = newName;
+            if (formHolderInput) formHolderInput.value = newName;
+        }
+
+        function selectThemeOption(themeName) {
+            selectedTheme = themeName;
+            ['green', 'blue', 'purple'].forEach(t => {
+                const opt = document.getElementById('thm-opt-' + t);
+                if (opt) {
+                    if (t === themeName) opt.classList.add('active');
+                    else opt.classList.remove('active');
+                }
+            });
+            document.documentElement.setAttribute('data-theme', themeName);
+        }
+
+        function saveMyPageSettings() {
+            const name = document.getElementById('my-name-input').value;
+            const title = document.getElementById('my-title-select').value;
+            const dept = document.getElementById('my-dept-select').value;
+            const bank = document.getElementById('my-bank-input').value;
+            const account = document.getElementById('my-account-input').value;
+            const holder = document.getElementById('my-holder-input').value;
+            const mode = document.getElementById('my-mode-select').value;
+
+            localStorage.setItem('saenuri_user_name', name);
+            localStorage.setItem('saenuri_user_theme', selectedTheme);
+            localStorage.setItem('saenuri_user_mode', mode);
+            localStorage.setItem('saenuri_default_bank', bank);
+            localStorage.setItem('saenuri_default_account', account);
+            localStorage.setItem('saenuri_default_holder', holder);
+
+            document.getElementById('user-name-display').textContent = name + ' ' + title + '님';
+            document.getElementById('form-dept-select').value = dept;
+            document.getElementById('form-account-input').value = account;
+            document.getElementById('form-holder-input').value = holder;
+
+            renderFormMode(mode);
+
+            alert('🎉 마이페이지 설정이 저장되었습니다!\n[' + (mode === 'onepage' ? '📄 원페이지 스크롤 모드' : '✨ 3단계 톡톡 위자드 모드') + ']가 적용되어 폼으로 이동합니다.');
+            showTab('form');
+        }
+
+        function switchRole(role, nameDisplay) {
+            currentRole = role;
+            document.getElementById('user-name-display').textContent = nameDisplay;
+            document.getElementById('user-role-badge').textContent = '(' + getRoleLabel(role) + ')';
+
+            const formTabBtn = document.getElementById('tab-form-btn');
+            const statusTabBtn = document.getElementById('tab-status-btn');
+            const adminTabBtn = document.getElementById('tab-admin-btn');
+            const siteAdminTabBtn = document.getElementById('tab-site-admin-btn');
+            const mypageTabBtn = document.getElementById('tab-mypage-btn');
+
+            if (role === 'APPLICANT') {
+                formTabBtn.style.display = 'block';
+                statusTabBtn.style.display = 'block';
+                adminTabBtn.style.display = 'none';
+                siteAdminTabBtn.style.display = 'none';
+                mypageTabBtn.style.display = 'block';
+                showTab('form');
+            } else if (role === 'TREASURER') {
+                formTabBtn.style.display = 'none';
+                statusTabBtn.style.display = 'none';
+                adminTabBtn.style.display = 'block';
+                siteAdminTabBtn.style.display = 'none';
+                mypageTabBtn.style.display = 'block';
+                showTab('admin');
+            } else if (role === 'ADMIN') {
+                formTabBtn.style.display = 'none';
+                statusTabBtn.style.display = 'none';
+                adminTabBtn.style.display = 'block';
+                siteAdminTabBtn.style.display = 'block';
+                mypageTabBtn.style.display = 'block';
+                showTab('site_admin');
+            }
+        }
+
+        function getRoleLabel(role) {
+            switch(role) {
+                case 'APPLICANT': return '신청자';
+                case 'TREASURER': return '재정부';
+                case 'ADMIN': return '👑 관리자';
+                default: return '신청자';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('saenuri_user_theme');
+            if (savedTheme) selectThemeOption(savedTheme);
+
+            const savedMode = localStorage.getItem('saenuri_user_mode') || 'wizard';
+            const modeSelect = document.getElementById('my-mode-select');
+            if (modeSelect) modeSelect.value = savedMode;
+            renderFormMode(savedMode);
+        });
+
+        switchRole('APPLICANT', '김성도 집사님 (청년부)');
+    </script>
+</body>
+</html>

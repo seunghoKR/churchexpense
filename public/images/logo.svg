@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 200" width="100%" height="100%">
+  <!-- 그린먹 캘리그라피 배경 붓터치 -->
+  <path d="M 35 30 Q 275 10 515 35 Q 545 100 515 165 Q 275 190 35 165 Q 5 100 35 30 Z" fill="#54824e" />
+  
+  <!-- 십자가 캘리그라피 문양 -->
+  <path d="M 60 70 L 105 70 M 80 40 L 80 150" stroke="#ffffff" stroke-width="12" stroke-linecap="round" fill="none" />
+  
+  <!-- 기독교한국침례회 서체 -->
+  <text x="115" y="65" font-family="'Noto Sans KR', sans-serif" font-weight="700" font-size="20" fill="#ffffff" letter-spacing="1">기독교한국침례회</text>
+  
+  <!-- 세종새누리교회 캘리그라피 서체 -->
+  <text x="115" y="145" font-family="'Gowun Dodum', 'Noto Sans KR', sans-serif" font-weight="800" font-size="52" fill="#ffffff" letter-spacing="-1">세종새누리교회</text>
+</svg>
