@@ -50,9 +50,11 @@
                     <span id="user-status-badge" style="font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;">승인 완료</span>
                 </div>
                 <div id="role-switch-buttons" style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
-                    <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[신청자 모드]</button>
-                    <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[재정부 모드]</button>
-                    <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[👑 관리자 모드]</button>
+                    <span id="admin-test-mode-buttons" style="display:none; gap:4px; align-items:center; flex-wrap:wrap;">
+                        <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[신청자 모드]</button>
+                        <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[재정부 모드]</button>
+                        <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[👑 관리자 모드]</button>
+                    </span>
                     <button onclick="realLogout()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[🔒 로그아웃]</button>
                 </div>
             </div>
@@ -2158,21 +2160,23 @@
             if (btnTre) btnTre.style.cssText = (targetMode === 'TREASURER' ? activeStyle + " color:#059669; background:#d1fae5; border:1.5px solid #059669; outline-color:#059669;" : normalStyle + " color:#059669; background:#f0fdf4; border:1px solid #bbf7d0;");
             if (btnAdm) btnAdm.style.cssText = (targetMode === 'ADMIN' ? activeStyle + " color:#7c3aed; background:#ede9fe; border:1.5px solid #7c3aed; outline-color:#7c3aed;" : normalStyle + " color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff;");
 
+            const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' || currentRole === 'ADMIN';
+
             if (targetMode === 'APPLICANT') {
                 if (formTabBtn) formTabBtn.style.display = 'inline-block';
                 if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
                 if (adminTabBtn) adminTabBtn.style.display = 'none';
                 if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
                 if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
-                if (badge) badge.textContent = '(신청자 모드 시뮬레이션)';
+                if (badge) badge.textContent = isUserAdmin ? '(신청자 모드 시뮬레이션)' : '(신청자)';
                 showTab('form');
             } else if (targetMode === 'TREASURER') {
-                if (formTabBtn) formTabBtn.style.display = 'inline-block';
-                if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
+                if (formTabBtn) formTabBtn.style.display = 'none';
+                if (statusTabBtn) statusTabBtn.style.display = 'none';
                 if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
                 if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
                 if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
-                if (badge) badge.textContent = '(재정부 모드 시뮬레이션)';
+                if (badge) badge.textContent = isUserAdmin ? '(재정부 모드 시뮬레이션)' : '(재정담당자)';
                 showTab('admin');
             } else {
                 if (formTabBtn) formTabBtn.style.display = 'inline-block';
@@ -2185,12 +2189,19 @@
             }
         }
 
-        // 👑 역할별 탭 노출/숨김 엄격 제어 함수
+        // 👑 역할별 탭 노출/숨김 및 관리자 테스트 툴바 제어 함수
         function switchRole(role, nameDisplay) {
             currentRole = role;
             if (nameDisplay) {
                 document.getElementById('user-name-display').textContent = nameDisplay;
             }
+
+            const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' || role === 'ADMIN';
+            const adminTestButtons = document.getElementById('admin-test-mode-buttons');
+            if (adminTestButtons) {
+                adminTestButtons.style.display = isUserAdmin ? 'inline-flex' : 'none';
+            }
+
             switchRoleMode(role);
         }
 
