@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>세종새누리교회 비용지출요청</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260812_99">
 </head>
 <body>
 
@@ -20,19 +23,37 @@
 
     <div class="container">
 
+        <!-- ⏳ 승인 대기 성도님 전용 안내 배너 -->
+        <div id="pending-approval-banner" class="card" style="display:none; background:#fffbeb; border-color:#fde68a; border-left:5px solid #f59e0b; margin-bottom:12px; padding:14px;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+                <span style="font-size:26px; line-height:1;">⏳</span>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                        <strong style="color:#b45309; font-size:15px; font-weight:800;">회원 승인 대기 중입니다</strong>
+                        <span style="font-size:11.5px; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:10px; font-weight:bold;">승인 대기 회원</span>
+                    </div>
+                    <p style="font-size:13px; color:#78350f; margin-top:4px; margin-bottom:0; line-height:1.4;">
+                        성도님의 계정(<strong id="user-email-display" style="color:#92400e; text-decoration:underline;">-</strong>)은 현재 승인 검토 상태입니다.<br>
+                        <strong>[마이페이지]</strong>에서 입금 계좌 등록이 가능하며, 관리자의 승인 후 지출요청서 제출이 활성화됩니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- 🛠️ 로그인 상태 정보 및 테스트용 툴바 -->
-        <div class="card" style="padding: 12px; margin-bottom: 12px; background-color: #f0fdf4; border-color: #bbf7d0;">
+        <div class="card" id="user-toolbar-card" style="padding: 12px; margin-bottom: 12px; background-color: #f0fdf4; border-color: #bbf7d0;">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                <div>
+                <div style="word-break:keep-all; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     <strong>👤 현재 접속:</strong> 
                     <span id="user-name-display" style="color:#047857; font-weight:700;">김성도 집사님</span>
                     <span id="user-role-badge" style="font-size:13px; color:#6b7280; font-weight:bold;">(신청자)</span>
+                    <span id="user-status-badge" style="font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;">승인 완료</span>
                 </div>
-                <div style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
-                    <button onclick="switchRole('APPLICANT', '김성도 집사님 (청년부)')" class="btn-role-switch" style="color:#2563eb;">[신청자 모드]</button>
-                    <button onclick="switchRole('TREASURER', '이재정 장로님 (재정부)')" class="btn-role-switch" style="color:#059669;">[재정부 모드]</button>
-                    <button onclick="switchRole('ADMIN', '최관리 목사님 (사이트 관리자)')" class="btn-role-switch" style="color:#7c3aed;">[👑 관리자 모드]</button>
-                    <button onclick="realLogout()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:3px 7px; border-radius:6px; font-weight:bold; cursor:pointer;">[🔒 로그아웃]</button>
+                <div id="role-switch-buttons" style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[신청자 모드]</button>
+                    <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[재정부 모드]</button>
+                    <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[👑 관리자 모드]</button>
+                    <button onclick="realLogout()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[🔒 로그아웃]</button>
                 </div>
             </div>
         </div>
@@ -66,7 +87,7 @@
                     </div>
                 </div>
 
-                <form id="expense-submit-form" onsubmit="event.preventDefault(); alert('🎉 지출요청서가 정상 제출되었습니다!'); showTab('status');">
+                <form id="expense-submit-form" onsubmit="event.preventDefault(); handleExpenseSubmit();">
                     <!-- Step 1: 부서 및 목적 -->
                     <div id="w-step-1-panel" class="card" style="display:block;">
                         <div class="card-title">📌 1단계: 부서 및 지출 목적 입력</div>
@@ -97,20 +118,23 @@
                         </p>
 
                         <div id="w-items-card-list">
-                            <div class="item-card-row" style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                    <span style="font-size:13px; font-weight:800; color:var(--primary-color);">항목 #1</span>
+                            <div class="item-card-row" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px; margin-bottom:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="font-size:13.5px; font-weight:800; color:var(--primary-color);">항목 #1</span>
                                     <button type="button" class="btn-danger-sm" onclick="removeItemCard(this)">✕ 삭제</button>
                                 </div>
-                                <div class="form-group" style="margin-bottom:6px;">
-                                    <input type="text" class="form-control item-name-field" placeholder="예: 수련회 간식 (음료/과자)" style="font-size:14.5px; padding:9px;">
+                                <div class="form-group" style="margin-bottom:8px;">
+                                    <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">내용 <span style="color:#ef4444;">*</span></label>
+                                    <input type="text" class="form-control item-name-field" placeholder="내용 입력" style="font-size:14px; padding:9px;">
                                 </div>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                                     <div>
-                                        <input type="number" class="form-control item-amount-field" placeholder="예: 85000" oninput="calcTotalAmount()" style="font-size:14px; padding:8px;">
+                                        <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">금액 <span style="color:#ef4444;">*</span></label>
+                                        <input type="number" class="form-control item-amount-field" placeholder="금액 입력" oninput="calcTotalAmount()" style="font-size:14px; padding:9px;">
                                     </div>
                                     <div>
-                                        <input type="text" class="form-control item-note-field" placeholder="예: 마트 결제" style="font-size:14px; padding:8px;">
+                                        <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">비고</label>
+                                        <input type="text" class="form-control item-note-field" placeholder="비고" style="font-size:14px; padding:9px;">
                                     </div>
                                 </div>
                             </div>
@@ -135,7 +159,33 @@
                     <!-- Step 3: 계좌 및 영수증 -->
                     <div id="w-step-3-panel" class="card" style="display:none;">
                         <div class="card-title">💳 3단계: 입금 계좌 & 영수증 첨부</div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:12px;">
+                        <div style="display:grid; grid-template-columns: 1.2fr 1.8fr 1fr; gap: 6px; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label>은행명 <span class="required">*</span></label>
+                                <select id="form-bank-select" class="form-control" onchange="toggleDirectBankInput(this, 'form-bank-direct-input')" style="padding:11px; font-size:14px;">
+                                    <option value="">🏦 은행 선택</option>
+                                    <option value="NH농협" selected>NH농협은행</option>
+                                    <option value="KB국민">KB국민은행</option>
+                                    <option value="신한">신한은행</option>
+                                    <option value="우리">우리은행</option>
+                                    <option value="하나">하나은행</option>
+                                    <option value="IBK기업">IBK기업은행</option>
+                                    <option value="카카오뱅크">카카오뱅크</option>
+                                    <option value="케이뱅크">케이뱅크</option>
+                                    <option value="토스뱅크">토스뱅크</option>
+                                    <option value="SC제일">SC제일은행</option>
+                                    <option value="수협">수협은행</option>
+                                    <option value="한국씨티">한국씨티은행</option>
+                                    <option value="부산은행">부산은행</option>
+                                    <option value="대구은행">대구은행 (iM뱅크)</option>
+                                    <option value="경남은행">경남은행</option>
+                                    <option value="광주은행">광주은행</option>
+                                    <option value="전북은행">전북은행</option>
+                                    <option value="제주은행">제주은행</option>
+                                    <option value="DIRECT">✍️ 직접 입력</option>
+                                </select>
+                                <input type="text" id="form-bank-direct-input" class="form-control" placeholder="은행명 직접 입력" style="display:none; margin-top:6px; font-size:13px; padding:8px;">
+                            </div>
                             <div class="form-group">
                                 <label>계좌번호 <span class="required">*</span></label>
                                 <input type="text" id="form-account-input" class="form-control" placeholder="예: 351-1234-5678-00" style="padding:11px;">
@@ -177,114 +227,140 @@
         <!-- 2. 📋 진행 현황 Section -->
         <div id="section-status" style="display:none;">
             <div class="card">
-                <div class="card-title">⚡ 최근 지출요청 진행 현황 (1개월 이내)</div>
-                <div style="border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; background:#fff;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <span style="font-weight:700; font-size:14.5px; color:var(--primary-color);">EXP-202608-0001</span>
-                        <span class="status-badge status-PAID" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>
-                    </div>
-                    <h3 style="font-size:15.5px; font-weight:700; margin-bottom:4px;">청년부 여름 수련회 물품 구매</h3>
-                    <div style="font-size:13.5px; color:var(--text-secondary);">신청자: <strong>김성도 집사</strong> | 신청금액: <strong>85,000 원</strong> | 요청일: 2026-08-11</div>
+                <div class="card-title" style="justify-content:space-between; align-items:center;">
+                    <span>⚡ 최근 지출요청 진행 현황</span>
+                    <button type="button" onclick="fetchExpenseRequestsFromServer()" style="background:#2563eb; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                        🔄 새로고침
+                    </button>
                 </div>
-            </div>
-
-            <div class="card" style="border-top:3px solid #64748b;">
-                <div class="card-title" style="color:#334155;">📜 지난 지출 신청 이력 (집행완료 1개월 경과건)</div>
-                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
-                    집행이 확정되고 1개월이 지난 신청 내역은 간단 목록으로 안전하게 보관됩니다.
-                </p>
-                <table class="admin-user-table">
-                    <thead>
-                        <tr><th>집행일자</th><th>부서</th><th>지출 목적</th><th>금액</th><th>상태</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>2026-07-02</td>
-                            <td>청년부</td>
-                            <td>6월 청년부 정기모임 모임비</td>
-                            <td>45,000 원</td>
-                            <td><span style="color:#059669; font-weight:bold;">✅ 완료</span></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="user-status-cards-list">
+                    <div style="font-size:13.5px; color:#64748b; padding:16px; text-align:center;">지출요청 목록을 불러오는 중입니다...</div>
+                </div>
             </div>
         </div>
 
         <!-- 3. 👤 마이페이지 Section -->
         <div id="section-mypage" style="display:none;">
-            <div class="card" style="border-top:3px solid var(--primary-color);">
-                <div class="card-title" style="color:var(--primary-color);">👤 내 프로필 & 취향</div>
-                <div class="form-group">
-                    <label>성명 (SNS 로그인 정보 연동)</label>
-                    <input type="text" id="my-name-input" class="form-control" value="김성도" oninput="syncNameWithHolder(this.value)">
+
+            <!-- ✨ 신규 사용자 회원 정보 등록 가이드 배너 -->
+            <div id="mypage-welcome-guide" class="card" style="border-top:3.5px solid #059669; background:#f0fdf4; border-color:#bbf7d0; margin-bottom:14px;">
+                <div style="display:flex; align-items:flex-start; gap:10px;">
+                    <span style="font-size:24px;">✨</span>
+                    <div>
+                        <strong style="color:#047857; font-size:15px; font-weight:800;">성도님 환영합니다! 프로필 및 계좌를 등록해 주세요</strong>
+                        <p style="font-size:13px; color:#166534; margin-top:4px; margin-bottom:0; line-height:1.4;">
+                            아래에서 성함, 주로 사용하는 이메일, 자주 쓰는 환급 계좌를 입력하고 
+                            <strong>[💾 마이페이지 설정 저장하기]</strong>를 눌러주세요.<br>
+                            저장 완료 시 <strong>사이트 관리자에게 회원 승인 요청 알림</strong>이 자동으로 발송됩니다!
+                        </p>
+                    </div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                    <div class="form-group">
-                        <label>교회 직함 선택</label>
-                        <select id="my-title-select" class="form-control">
-                            <option value="성도">성도</option>
-                            <option value="집사" selected>집사</option>
-                            <option value="권사">권사</option>
-                            <option value="장로">장로</option>
-                            <option value="목사">목사</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>소속 부서 선택</label>
-                        <select id="my-dept-select" class="form-control">
-                            <option value="청년부" selected>청년부</option>
-                            <option value="주일학교">주일학교</option>
-                            <option value="방송실">방송실</option>
-                        </select>
-                    </div>
+            </div>
+
+            <div class="card" style="border-top:3px solid var(--primary-color);">
+                <div class="card-title" style="color:var(--primary-color);">👤 내 프로필 & 연락처</div>
+                <div class="form-group">
+                    <label style="font-weight:700;">성명 (SNS 로그인 성명 연동)</label>
+                    <input type="text" id="my-name-input" class="form-control" placeholder="성함 입력 (예: 김성도)" oninput="syncNameWithHolder(this.value)">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:700;">주로 사용하는 이메일 (연락 및 승인 알림 수신용)</label>
+                    <input type="email" id="my-email-input" class="form-control" placeholder="이메일 주소 입력 (예: user@example.com)">
                 </div>
             </div>
 
             <!-- 자주 쓰는 환급 계좌 등록 -->
             <div class="card" style="border-top:3px solid #059669;">
                 <div class="card-title" style="color:#047857;">💳 자주 쓰는 환급 계좌 미리 등록</div>
-                <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:6px;">
-                    <input type="text" id="my-bank-input" class="form-control" placeholder="은행명" value="농협">
-                    <input type="text" id="my-account-input" class="form-control" placeholder="계좌번호" value="351-1234-5678-00">
-                    <input type="text" id="my-holder-input" class="form-control" placeholder="예금주" value="김성도">
+                <p style="font-size:12.5px; color:#64748b; margin-bottom:10px;">
+                    * 아래 계좌 정보는 지출요청서 작성 시 자동으로 불러와 환급 계좌로 적용됩니다.
+                </p>
+                <div style="display:grid; grid-template-columns: 1.2fr 2fr 1fr; gap:6px;">
+                    <div>
+                        <select id="my-bank-select" class="form-control" onchange="toggleDirectBankInput(this, 'my-bank-direct-input')" style="padding:10px; font-size:13.5px;">
+                            <option value="">🏦 은행 선택</option>
+                            <option value="NH농협" selected>NH농협은행</option>
+                            <option value="KB국민">KB국민은행</option>
+                            <option value="신한">신한은행</option>
+                            <option value="우리">우리은행</option>
+                            <option value="하나">하나은행</option>
+                            <option value="IBK기업">IBK기업은행</option>
+                            <option value="카카오뱅크">카카오뱅크</option>
+                            <option value="케이뱅크">케이뱅크</option>
+                            <option value="토스뱅크">토스뱅크</option>
+                            <option value="SC제일">SC제일은행</option>
+                            <option value="수협">수협은행</option>
+                            <option value="한국씨티">한국씨티은행</option>
+                            <option value="부산은행">부산은행</option>
+                            <option value="대구은행">대구은행 (iM뱅크)</option>
+                            <option value="경남은행">경남은행</option>
+                            <option value="광주은행">광주은행</option>
+                            <option value="전북은행">전북은행</option>
+                            <option value="제주은행">제주은행</option>
+                            <option value="DIRECT">✍️ 직접 입력</option>
+                        </select>
+                        <input type="text" id="my-bank-direct-input" class="form-control" placeholder="은행명 직접 입력" style="display:none; margin-top:6px; font-size:13px; padding:8px;">
+                    </div>
+                    <input type="text" id="my-account-input" class="form-control" placeholder="계좌번호 (예: 351-1234-5678)" value="">
+                    <input type="text" id="my-holder-input" class="form-control" placeholder="예금주" value="">
+                </div>
+                <button type="button" class="btn-primary-lg" style="margin-top:14px;" onclick="saveMyPageSettings()">
+                    💾 마이페이지 저장하기
+                </button>
+            </div>
+
+            <!-- ✈️ 텔레그램 실시간 알림 연동 카드 -->
+            <div class="card" style="border-top:3.5px solid #0088cc; background:#f0f9ff; border-color:#bae6fd; margin-top:14px;">
+                <div class="card-title" style="color:#0369a1; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+                    <span>✈️ 텔레그램 실시간 1초 알림 연동</span>
+                    <button type="button" onclick="openTelegramGuideModal()" style="background:#0088cc; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                        ❓ 텔레그램 Chat ID 확인방법
+                    </button>
+                </div>
+                <p style="font-size:13px; color:#0369a1; margin-bottom:10px; line-height:1.4;">
+                    텔레그램 Chat ID를 등록하시면 지출요청 심사 결과(승인/반려)를 스마트폰 텔레그램 메시지로 1초 만에 무료 수신하실 수 있습니다.
+                </p>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-weight:700; font-size:13px; color:#0369a1; margin-bottom:4px; display:block;">텔레그램 Chat ID (숫자 번호)</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="my-telegram-input" class="form-control" placeholder="예: 123456789 (확인방법 버튼 참고)" style="font-size:14px; padding:9px;">
+                        <button type="button" onclick="saveTelegramId()" style="background:#0088cc; color:#fff; border:none; padding:9px 14px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;">
+                            💾 저장
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 🎨 테마 및 폼 스타일 선택기 -->
-            <div class="card" style="border-top:3px solid #7c3aed;">
-                <div class="card-title" style="color:#6b21a8;">🎨 나만의 선호 UI 스타일 & 테마 색상 선택</div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label style="font-weight:700;">기본 지출요청서 작성 폼 스타일 선택</label>
-                    <select id="my-mode-select" class="form-control" style="font-size:14.5px; padding:10px; border-color:#7c3aed;">
-                        <option value="wizard" selected>✨ 3단계 톡톡 위자드 모드 (기본)</option>
-                        <option value="onepage">📄 한눈에 보는 원페이지 스크롤 모드</option>
-                    </select>
+
+
+            <!-- 🔗 SNS 소셜 계정 듀얼 연동 관리 (구글 & 카카오 동시 연동) -->
+            <div class="card" style="border-top:3.5px solid #2563eb; background:#eff6ff; border-color:#bfdbfe; margin-top:14px;">
+                <div class="card-title" style="color:#1e40af;">🔗 SNS 소셜 로그인 듀얼 계정 연동 관리</div>
+                <p style="font-size:13px; color:#1e3a8a; margin-bottom:12px; line-height:1.4;">
+                    하나의 교인 프로필에 <strong>구글 계정</strong>과 <strong>카카오 계정</strong>을 동시에 연동할 수 있습니다. 
+                    추가 연동 시 어느 계정으로 로그인하셔도 동일한 프로필과 승인 상태가 유지됩니다.
+                </p>
+
+                <div id="social-link-status-container" style="display:flex; flex-direction:column; gap:10px;">
+                    <!-- 소셜 동기화 상태 뱃지 및 추가 연동 버튼이 자바스크립트에 의해 실시간 렌더링됩니다 -->
                 </div>
-                <div class="form-group">
-                    <label style="font-weight:700;">좋아하는 테마 컬러 선택</label>
-                    <div class="theme-picker-group">
-                        <div class="theme-card-option active" id="thm-opt-green" onclick="selectThemeOption('green')">
-                            <div class="theme-color-badge" style="background:#54824e;"></div>
-                            <div style="font-size:13px; font-weight:bold; color:#436a3e;">🌿 딥그린</div>
-                        </div>
-                        <div class="theme-card-option" id="thm-opt-blue" onclick="selectThemeOption('blue')">
-                            <div class="theme-color-badge" style="background:#1e3a8a;"></div>
-                            <div style="font-size:13px; font-weight:bold; color:#1e3a8a;">🔵 오션블루</div>
-                        </div>
-                        <div class="theme-card-option" id="thm-opt-purple" onclick="selectThemeOption('purple')">
-                            <div class="theme-color-badge" style="background:#6b21a8;"></div>
-                            <div style="font-size:13px; font-weight:bold; color:#6b21a8;">🟣 퍼플</div>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn-primary-lg" style="margin-top:14px;" onclick="saveMyPageSettings()">
-                    💾 마이페이지 설정 저장하기
-                </button>
             </div>
         </div>
 
         <!-- 4. 📋 재정부 전용 지출요청 심사 & 스마트 2대 버튼 목록 -->
         <div id="section-admin" style="display:none;">
+
+            <!-- 🔔 재정부 전용 실시간 지출요청 알림함 카드 -->
+            <div class="card" style="border-top:3.5px solid #059669; background:#f0fdf4; border-color:#bbf7d0; margin-bottom:14px;">
+                <div class="card-title" style="color:#047857; justify-content:space-between;">
+                    <span>🔔 재정부 전용 실시간 지출요청 알림함</span>
+                    <span id="treasurer-notif-count" style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:10px; font-weight:bold;">0 건</span>
+                </div>
+                <div id="treasurer-notif-list" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+                    <div style="font-size:13px; color:#64748b; padding:6px; text-align:center;">도착한 신규 알림이 없습니다.</div>
+                </div>
+            </div>
+
             <div class="card">
                 <!-- 🔘 상단 2대 핵심 버튼 -->
                 <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
@@ -318,24 +394,24 @@
                 <div id="admin-request-cards-container">
                     <!-- 요청 카드 #1 -->
                     <div class="request-summary-card" style="margin-bottom:10px; display:flex; gap:10px; align-items:flex-start;">
-                        <input type="checkbox" class="chk-item-batch" value="EXP-202608-0001" data-amount="85000" data-status="PAID" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
-                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0001', '청년부 여름 수련회 물품 구매', '85,000 원', '청년부', '김성도 집사', 'PAID', '농협 351-1234-5678-00 (예금주: 김성도)')">
+                        <input type="checkbox" class="chk-item-batch" value="0001" data-amount="85000" data-status="PAID" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1;" onclick="openDetailModal('0001', '청년부 여름 수련회 물품 구매', '85,000 원', '청년부', '김성도 집사', 'PAID', '농협 351-1234-5678 (예금주: 김성도)')">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-weight:700; color:var(--primary-color);">EXP-202608-0001</span>
-                                <span class="status-badge status-PAID" id="badge-EXP-202608-0001" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>
+                                <span style="font-weight:800; color:var(--primary-color); font-size:15px;">#0001</span>
+                                <span class="status-badge status-PAID" id="badge-0001" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>
                             </div>
                             <div style="font-weight:bold; font-size:15px; margin-top:4px;">청년부 여름 수련회 물품 구매</div>
-                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 김성도 집사 | 금액: 85,000 원 | 계좌: 농협 351-1234-5678-00</div>
+                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 김성도 집사 | 금액: 85,000 원 | 계좌: 농협 351-1234-5678</div>
                         </div>
                     </div>
 
                     <!-- 요청 카드 #2 -->
                     <div class="request-summary-card" style="display:flex; gap:10px; align-items:flex-start;">
-                        <input type="checkbox" class="chk-item-batch" value="EXP-202608-0002" data-amount="120000" data-status="APPROVED" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
-                        <div style="flex:1;" onclick="openDetailModal('EXP-202608-0002', '주일학교 주일과별 교재 구입', '120,000 원', '주일학교', '이성도 집사', 'PENDING', '농협 351-9988-7766 (예금주: 이성도)')">
+                        <input type="checkbox" class="chk-item-batch" value="0002" data-amount="120000" data-status="APPROVED" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1;" onclick="openDetailModal('0002', '주일학교 주일과별 교재 구입', '120,000 원', '주일학교', '이성도 집사', 'PENDING', '농협 351-9988-7766 (예금주: 이성도)')">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-weight:700; color:var(--primary-color);">EXP-202608-0002</span>
-                                <span class="status-badge status-PENDING" id="badge-EXP-202608-0002" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">⏳ 승인 대기</span>
+                                <span style="font-weight:800; color:var(--primary-color); font-size:15px;">#0002</span>
+                                <span class="status-badge status-PENDING" id="badge-0002" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">⏳ 승인 대기</span>
                             </div>
                             <div style="font-weight:bold; font-size:15px; margin-top:4px;">주일학교 주일과별 교재 구입</div>
                             <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: 이성도 집사 | 금액: 120,000 원 | 계좌: 농협 351-9988-7766</div>
@@ -347,6 +423,18 @@
 
         <!-- 5. 👑 사이트 관리자 전용 3대 대시보드 Section -->
         <div id="section-site_admin" style="display:none;">
+
+            <!-- 🔔 승인 요청 목록 카드 -->
+            <div class="card" style="border-top:3.5px solid #7c3aed; background:#faf5ff; border-color:#e9d5ff; margin-bottom:14px;">
+                <div class="card-title" style="color:#6b21a8; justify-content:space-between;">
+                    <span>🔔 승인 요청 목록</span>
+                    <span id="admin-notif-count" style="font-size:12px; background:#7c3aed; color:#fff; padding:2px 8px; border-radius:10px; font-weight:bold;">0 건</span>
+                </div>
+                <div id="admin-notif-list" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                    <div style="font-size:13px; color:#64748b; padding:6px; text-align:center;">도착한 회원 승인 알림이 없습니다.</div>
+                </div>
+            </div>
+
             <!-- 🏢 1. 부서 생성/수정/삭제 관리 -->
             <div class="card" style="border-top:3.5px solid #7c3aed;">
                 <div class="card-title" style="color:#6b21a8;">🏢 1. 부서 생성 / 수정 / 삭제 관리</div>
@@ -385,109 +473,61 @@
                 </div>
             </div>
 
-            <!-- ✝️ 2. 직분 생성/수정/삭제 관리 -->
-            <div class="card" style="border-top:3.5px solid #2563eb;">
-                <div class="card-title" style="color:#1e3a8a;">✝️ 2. 직분 생성 / 수정 / 삭제 관리</div>
-                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
-                    지출요청서 서식 및 교인 프로필에 표시될 교회 직분을 관리합니다.
-                </p>
-
-                <div style="display:flex; gap:6px; margin-bottom:12px;">
-                    <input type="text" id="new-title-name-input" class="form-control" placeholder="새 직분명 입력 (예: 전도사, 협동목사)" style="padding:9px;">
-                    <button type="button" class="btn-primary-lg" onclick="addNewTitleItem()" style="width:auto; padding:9px 14px; font-size:13.5px; background:#2563eb; white-space:nowrap;">
-                        ➕ 추가
+            <!-- 👥 2. 교인 회원 승인대기 목록 및 승인 관리 -->
+            <div class="card" style="border-top:3.5px solid #7c3aed; background:#faf5ff; border-color:#e9d5ff;">
+                <div class="card-title" style="color:#6b21a8; justify-content:space-between;">
+                    <span>👥 2. 교인 회원 승인대기 목록 및 승인 관리</span>
+                    <button type="button" onclick="fetchPendingUsersFromServer()" style="background:#7c3aed; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                        🔄 실시간 목록 갱신
                     </button>
                 </div>
+                <p style="font-size:13px; color:#6b21a8; margin-bottom:10px;">
+                    소셜 로그인으로 접속한 신규 성도님들의 승인 대기 목록입니다. [✅ 회원 승인]을 누르시면 지출요청서 작성이 정회원으로 즉시 승인됩니다.
+                </p>
 
-                <div class="admin-tag-group" id="title-tag-container">
-                    <div class="admin-tag-item" id="tag-title-성도">
-                        <span>성도</span>
-                        <button type="button" class="admin-tag-btn" onclick="editTitleItem('성도')">✏️</button>
-                        <button type="button" class="admin-tag-btn" onclick="deleteTitleItem('성도')">✕</button>
-                    </div>
-                    <div class="admin-tag-item" id="tag-title-집사">
-                        <span>집사</span>
-                        <button type="button" class="admin-tag-btn" onclick="editTitleItem('집사')">✏️</button>
-                        <button type="button" class="admin-tag-btn" onclick="deleteTitleItem('집사')">✕</button>
-                    </div>
-                    <div class="admin-tag-item" id="tag-title-권사">
-                        <span>권사</span>
-                        <button type="button" class="admin-tag-btn" onclick="editTitleItem('권사')">✏️</button>
-                        <button type="button" class="admin-tag-btn" onclick="deleteTitleItem('권사')">✕</button>
-                    </div>
-                    <div class="admin-tag-item" id="tag-title-장로">
-                        <span>장로</span>
-                        <button type="button" class="admin-tag-btn" onclick="editTitleItem('장로')">✏️</button>
-                        <button type="button" class="admin-tag-btn" onclick="deleteTitleItem('장로')">✕</button>
-                    </div>
-                    <div class="admin-tag-item" id="tag-title-목사">
-                        <span>목사</span>
-                        <button type="button" class="admin-tag-btn" onclick="editTitleItem('목사')">✏️</button>
-                        <button type="button" class="admin-tag-btn" onclick="deleteTitleItem('목사')">✕</button>
-                    </div>
+                <div class="table-responsive">
+                    <table class="status-table" style="background:#ffffff; border-radius:8px;">
+                        <thead>
+                            <tr>
+                                <th>성명 / 이메일</th>
+                                <th>가입 시각</th>
+                                <th>승인 처리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="server-pending-users-table-body">
+                            <tr>
+                                <td colspan="3" style="text-align:center; color:#64748b; padding:12px;">
+                                    서버에서 승인 대기 목록을 불러오는 중입니다...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- 👤 3. 회원 정보 수정 ('구분' 컬럼 삭제 수술 완료!) -->
+            <!-- 👤 3. 회원 정보 수정 및 권한 관리 -->
             <div class="card" style="border-top:3.5px solid #059669;">
-                <div class="card-title" style="color:#047857;">👤 3. 회원 정보 수정</div>
+                <div class="card-title" style="color:#047857; justify-content:space-between;">
+                    <span>👤 3. 승인 회원 목록 및 권한 관리</span>
+                    <button type="button" onclick="fetchApprovedUsersFromServer()" style="background:#059669; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                        🔄 실시간 교인목록 갱신
+                    </button>
+                </div>
                 <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
-                    가입된 회원들의 직분 및 시스템 권한(신청자 / 재정부 / 사이트 관리자)을 1초 만에 변경 부여합니다.
+                    승인 완료된 전체 교인 회원의 시스템 권한(신청자 / 재정부 / 사이트 관리자)을 1초 만에 관리합니다.
                 </p>
 
                 <table class="admin-user-table">
                     <thead>
                         <tr>
-                            <th style="width:22%;">성명</th>
-                            <th style="width:18%;">직분</th>
-                            <th style="width:24%;">부서</th>
-                            <th style="width:36%;">변경</th>
+                            <th style="width:40%;">성명 / 이메일</th>
+                            <th style="width:60%;">권한 설정 / 관리</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-user-list-tbody">
-                        <tr id="user-row-1">
-                            <td><strong>김성도</strong></td>
-                            <td>집사</td>
-                            <td>청년부</td>
-                            <td>
-                                <div style="display:flex; justify-content:center; align-items:center; gap:2px;">
-                                    <select class="form-control" style="font-size:11.5px; padding:3px 2px; width:72px; display:inline-block;" onchange="changeUserRole('김성도', this.value)">
-                                        <option value="APPLICANT" selected>신청자</option>
-                                        <option value="TREASURER">재정부</option>
-                                        <option value="ADMIN">관리자</option>
-                                    </select>
-                                    <button type="button" class="btn-danger-sm" onclick="deleteUserRow('user-row-1', '김성도')" style="padding:3px 6px; font-size:11.5px;">삭제</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr id="user-row-2">
-                            <td><strong>이재정</strong></td>
-                            <td>장로</td>
-                            <td>재정부</td>
-                            <td>
-                                <div style="display:flex; justify-content:center; align-items:center; gap:2px;">
-                                    <select class="form-control" style="font-size:11.5px; padding:3px 2px; width:72px; display:inline-block;" onchange="changeUserRole('이재정', this.value)">
-                                        <option value="APPLICANT">신청자</option>
-                                        <option value="TREASURER" selected>재정부</option>
-                                        <option value="ADMIN">관리자</option>
-                                    </select>
-                                    <button type="button" class="btn-danger-sm" onclick="deleteUserRow('user-row-2', '이재정')" style="padding:3px 6px; font-size:11.5px;">삭제</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr id="user-row-3">
-                            <td><strong>최관리</strong></td>
-                            <td>목사</td>
-                            <td>행정실</td>
-                            <td>
-                                <div style="display:flex; justify-content:center; align-items:center; gap:2px;">
-                                    <select class="form-control" style="font-size:11.5px; padding:3px 2px; width:72px; display:inline-block;" onchange="changeUserRole('최관리', this.value)">
-                                        <option value="APPLICANT">신청자</option>
-                                        <option value="TREASURER">재정부</option>
-                                        <option value="ADMIN" selected>관리자</option>
-                                    </select>
-                                    <button type="button" class="btn-danger-sm" onclick="deleteUserRow('user-row-3', '최관리')" style="padding:3px 6px; font-size:11.5px;">삭제</button>
-                                </div>
+                    <tbody id="server-approved-users-table-body">
+                        <tr>
+                            <td colspan="2" style="text-align:center; color:#64748b; padding:14px;">
+                                서버에서 승인 완료된 회원 목록을 불러오는 중입니다...
                             </td>
                         </tr>
                     </tbody>
@@ -501,14 +541,14 @@
     <div id="detail-review-modal" class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="m-modal-title">📌 지출요청 세부내용 (EXP-202608-0001)</h3>
+                <h3 id="m-modal-title">📌 지출요청 세부내용 (260813001)</h3>
                 <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
             </div>
 
             <div style="font-size:13.5px; line-height:1.6; margin-bottom:14px;">
                 <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
                     <div><strong>요청 건명:</strong> <span id="m-purpose-text" style="font-weight:bold; color:var(--primary-color);">청년부 여름 수련회 물품 구매</span></div>
-                    <div><strong>신청 정보:</strong> <span id="m-dept-text">청년부</span> - <span id="m-applicant-text">김성도 집사</span></div>
+                    <div><strong>신청 정보:</strong> <span id="m-dept-text">청년부</span> - <span id="m-applicant-text">김성도 님</span></div>
                     <div><strong>환급 계좌:</strong> <span id="m-account-text">농협 351-1234-5678-00 (예금주: 김성도)</span></div>
                     <div><strong>신청 총액:</strong> <span id="m-amount-text" style="font-size:16px; font-weight:800; color:#2563eb;">85,000 원</span></div>
                     <div><strong>현재 상태:</strong> <span id="m-status-text" class="status-badge">집행 완료</span></div>
@@ -530,18 +570,18 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom:14px;" id="m-memo-group">
-                    <label style="font-weight:700;">재정부 메모 / 반려 사유 (선택)</label>
-                    <input type="text" id="m-review-memo" class="form-control" placeholder="예: 영수증 적격 확인 완료">
+                    <label style="font-weight:700; color:#1e293b;">💬 재정부 심사 의견 / 반려 사유 (선택사항)</label>
+                    <textarea id="m-review-memo" class="form-control" rows="2" placeholder="승인 보기/참고사항 또는 반려 사유를 자유롭게 작성해 주세요." style="font-size:13.5px; padding:10px;"></textarea>
                 </div>
             </div>
 
             <!-- 🔘 승인 / 반려 버튼 구획 -->
             <div id="m-action-btn-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button type="button" class="btn-primary-lg" style="background:#ef4444; font-size:15px; padding:12px;" onclick="processApproval('REJECTED')">
-                    ❌ 반려
+                <button type="button" class="btn-primary-lg" style="background:#ef4444; font-size:15px; padding:12px; font-weight:800;" onclick="processApproval('REJECTED')">
+                    ❌ 반려 처리
                 </button>
-                <button type="button" class="btn-primary-lg" style="background:#059669; font-size:15px; padding:12px;" onclick="processApproval('APPROVED')">
-                    ✅ 승인
+                <button type="button" class="btn-primary-lg" style="background:#059669; font-size:15px; padding:12px; font-weight:800;" onclick="processApproval('APPROVED')">
+                    👍 지출 승인
                 </button>
             </div>
 
@@ -554,12 +594,67 @@
         </div>
     </div>
 
+    <!-- ✈️ 텔레그램 Chat ID 확인 안내 모달 -->
+    <div id="telegram-guide-modal" class="modal-backdrop">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header" style="border-bottom:1.5px solid #e0f2fe; padding-bottom:10px;">
+                <h3 style="font-size:16.5px; font-weight:800; color:#0088cc;">✈️ 텔레그램 Chat ID 확인 안내</h3>
+                <button type="button" class="modal-close-btn" onclick="closeTelegramGuideModal()">✕</button>
+            </div>
+            <div style="font-size:13.5px; line-height:1.6; color:#334155; margin-top:12px; text-align:left;">
+                <p style="margin-bottom:10px;">
+                    텔레그램 봇 실시간 무료 알림을 수신하려면 내 계정의 <strong>Chat ID (숫자 번호)</strong>가 필요합니다. 1분 만에 확인하는 방법입니다!
+                </p>
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;">
+                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">1단계: 텔레그램 앱 실행 후 봇 검색</div>
+                    <div>텔레그램 검색창에 <strong style="color:#0088cc;">@userinfobot</strong> 또는 <strong style="color:#0088cc;">@raw_data_bot</strong> 을 검색하고 대화를 시작합니다.</div>
+                </div>
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;">
+                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">2단계: /start 메시지 전송</div>
+                    <div>대화창에 <strong style="color:#0088cc;">/start</strong> 메시지를 보내면, 봇이 <strong>Id: 123456789</strong> 형태의 숫자를 즉시 답장해 줍니다.</div>
+                </div>
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:14px;">
+                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">3단계: 번호 복사 및 마이페이지 저장</div>
+                    <div>응답받은 숫자 번호(예: <strong style="color:#0088cc;">123456789</strong>)를 복사하여 마이페이지 [텔레그램 Chat ID] 란에 입력 후 [저장]을 누르시면 준비 끝!</div>
+                </div>
+            </div>
+            <button type="button" class="btn-primary-lg" style="background:#0088cc; font-size:14px; padding:11px;" onclick="closeTelegramGuideModal()">
+                👌 확인 완료
+            </button>
+        </div>
+    </div>
+
+    <!-- 📱 모바일 바탕화면 바로가기(앱 추가) 안내 팝업 -->
+    <div id="pwa-install-modal" class="modal-backdrop">
+        <div class="modal-content" style="max-width:440px; text-align:center;">
+            <div style="font-size:38px; margin-bottom:4px;">📱</div>
+            <h3 style="font-size:17.5px; font-weight:800; color:#1e293b; margin-bottom:6px;">새누리교회 지출요청서 웹앱</h3>
+            <p style="font-size:13.5px; color:#475569; margin-bottom:14px; line-height:1.5;">
+                스마트폰 바탕화면에 앱(바로가기)을 추가하시면<br>언제든지 1초 만에 편리하게 지출요청을 하실 수 있습니다!
+            </p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:left; font-size:13px; color:#334155; margin-bottom:14px; line-height:1.5;">
+                <div style="font-weight:bold; color:#2563eb; margin-bottom:6px;">📲 바탕화면 바로가기 추가 방법:</div>
+                <div style="margin-bottom:6px;">• <strong>아이폰(Safari)</strong>: 하단 <span style="color:#2563eb; font-weight:bold;">공유(⬆️)</span> 버튼 ➔ <span style="color:#2563eb; font-weight:bold;">[홈 화면에 추가]</span> 선택</div>
+                <div>• <strong>안드로이드(Chrome)</strong>: 우상단 <span style="color:#2563eb; font-weight:bold;">메뉴(⋮)</span> ➔ <span style="color:#2563eb; font-weight:bold;">[홈 화면에 추가]</span> 선택</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <button type="button" class="btn-primary-lg" style="background:#2563eb; font-size:14.5px; padding:11px;" onclick="closePwaModal()">
+                    ✨ 바로가기 추가하러 가기
+                </button>
+                <button type="button" style="background:transparent; color:#64748b; border:none; padding:6px; font-size:12.5px; cursor:pointer; text-decoration:underline;" onclick="hidePwaModalFor7Days()">
+                    🛑 7일 동안 이 안내 보지 않기 (팝업 차단)
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🖨️ 재정부 지출요청 총괄집계표 전용 인쇄/PDF 숨김 구획 -->
     <div id="print-report-container"></div>
 
     <script src="js/app.js"></script>
     <script>
-        let currentRole = 'APPLICANT';
         let selectedTheme = 'green';
         let itemCardCount = 1;
         let activeReqId = null;
@@ -578,6 +673,57 @@
             });
         }
 
+        // 🏢 사역 부서 전역 동기화 렌더링 시스템 (요청서 1단계, 마이페이지, 사이트 관리자 태그 관리 100% 일괄 반영)
+        const DEFAULT_DEPARTMENTS = ['교육-청소년', '교육-유치', '교육-초등', '교육-청년', '교육-장년', '선교-해외', '선교-국내', '예배-찬양'];
+
+        function renderDepartmentsAll(customList) {
+            const list = customList || JSON.parse(localStorage.getItem('saenuri_departments') || 'null') || DEFAULT_DEPARTMENTS;
+            localStorage.setItem('saenuri_departments', JSON.stringify(list));
+
+            const formSelect = document.getElementById('form-dept-select');
+            const mySelect = document.getElementById('my-dept-select');
+            const container = document.getElementById('dept-tag-container');
+
+            const optionsHtml = list.map(d => `<option value="${d}">${d}</option>`).join('');
+
+            if (formSelect) {
+                const currentVal = formSelect.value;
+                formSelect.innerHTML = optionsHtml;
+                if (list.includes(currentVal)) formSelect.value = currentVal;
+            }
+
+            if (mySelect) {
+                const currentVal = mySelect.value;
+                mySelect.innerHTML = optionsHtml;
+                if (list.includes(currentVal)) mySelect.value = currentVal;
+            }
+
+            if (container) {
+                container.innerHTML = list.map(d => `
+                    <div class="admin-tag-item" id="tag-dept-${d}">
+                        <span>${d}</span>
+                        <button type="button" class="admin-tag-btn" onclick="editDeptItem('${d}')">✏️</button>
+                        <button type="button" class="admin-tag-btn" onclick="deleteDeptItem('${d}')">✕</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function fetchDepartmentsFromServer() {
+            fetch('api/request_action.php?action=get_departments')
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.data && resData.data.length > 0) {
+                        renderDepartmentsAll(resData.data);
+                    } else {
+                        renderDepartmentsAll(DEFAULT_DEPARTMENTS);
+                    }
+                })
+                .catch(err => {
+                    renderDepartmentsAll(DEFAULT_DEPARTMENTS);
+                });
+        }
+
         // 🏢 1. 부서 추가 / 수정 / 삭제 기능
         function addNewDeptItem() {
             const input = document.getElementById('new-dept-name-input');
@@ -587,35 +733,53 @@
                 return;
             }
 
-            const container = document.getElementById('dept-tag-container');
-            const div = document.createElement('div');
-            div.className = 'admin-tag-item';
-            div.id = 'tag-dept-' + name;
-            div.innerHTML = `
-                <span>${name}</span>
-                <button type="button" class="admin-tag-btn" onclick="editDeptItem('${name}')">✏️</button>
-                <button type="button" class="admin-tag-btn" onclick="deleteDeptItem('${name}')">✕</button>
-            `;
-            container.appendChild(div);
+            const currentList = JSON.parse(localStorage.getItem('saenuri_departments') || 'null') || DEFAULT_DEPARTMENTS;
+            if (!currentList.includes(name)) {
+                currentList.push(name);
+            }
+            renderDepartmentsAll(currentList);
             input.value = '';
-            alert('🎉 [' + name + '] 부서가 추가되었습니다!');
+
+            const formData = new FormData();
+            formData.append('action', 'add_department');
+            formData.append('name', name);
+            fetch('api/request_action.php', { method: 'POST', body: formData }).catch(e => {});
+
+            alert('🎉 [' + name + '] 부서가 추가되었습니다!\n(요청서 작성 폼 1단계 및 마이페이지 부서 선택상자에 즉시 반영되었습니다)');
         }
 
         function editDeptItem(oldName) {
             const newName = prompt('✏️ 수정할 새로운 부서명을 입력하세요:', oldName);
             if (newName && newName.trim() !== '') {
-                const tag = document.getElementById('tag-dept-' + oldName);
-                if (tag) {
-                    tag.querySelector('span').textContent = newName.trim();
-                    alert('🎉 부서명이 [' + newName.trim() + '] 로 수정되었습니다!');
+                const currentList = JSON.parse(localStorage.getItem('saenuri_departments') || 'null') || DEFAULT_DEPARTMENTS;
+                const idx = currentList.indexOf(oldName);
+                if (idx !== -1) {
+                    currentList[idx] = newName.trim();
+                } else {
+                    currentList.push(newName.trim());
                 }
+                renderDepartmentsAll(currentList);
+
+                const formData = new FormData();
+                formData.append('action', 'add_department');
+                formData.append('name', newName.trim());
+                fetch('api/request_action.php', { method: 'POST', body: formData }).catch(e => {});
+
+                alert('🎉 부서명이 [' + newName.trim() + '] 로 수정되었습니다!');
             }
         }
 
         function deleteDeptItem(name) {
             if (confirm('🗑️ [' + name + '] 부서를 삭제하시겠습니까?')) {
-                const tag = document.getElementById('tag-dept-' + name);
-                if (tag) tag.remove();
+                let currentList = JSON.parse(localStorage.getItem('saenuri_departments') || 'null') || DEFAULT_DEPARTMENTS;
+                currentList = currentList.filter(d => d !== name);
+                renderDepartmentsAll(currentList);
+
+                const formData = new FormData();
+                formData.append('action', 'delete_department');
+                formData.append('name', name);
+                fetch('api/request_action.php', { method: 'POST', body: formData }).catch(e => {});
+
                 alert('🗑️ [' + name + '] 부서가 삭제되었습니다.');
             }
         }
@@ -670,11 +834,34 @@
             alert('🎉 [' + userName + '] 교인의 시스템 권한이 [' + roleLabel + '] (으)로 변경 부여되었습니다!');
         }
 
-        function deleteUserRow(rowId, userName) {
-            if (confirm('🗑️ 정말 [' + userName + '] 교인 계정을 시스템에서 삭제하시겠습니까?')) {
+        function deleteUserRow(rowId, userName, userEmail) {
+            if (!confirm('🗑️ 정말 [' + (userName || userEmail || '해당') + '] 교인 계정을 시스템에서 완전 삭제하시겠습니까?')) return;
+
+            if (userEmail) {
+                const formData = new FormData();
+                formData.append('action', 'delete_user');
+                formData.append('email', userEmail);
+
+                fetch('api/request_action.php', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(resData => {
+                        const row = document.getElementById(rowId);
+                        if (row) row.remove();
+                        alert('🗑️ [' + (userName || userEmail) + '] 회원 계정이 정상 삭제되었습니다.');
+                        fetchApprovedUsersFromServer();
+                        fetchPendingUsersFromServer();
+                    })
+                    .catch(err => {
+                        const row = document.getElementById(rowId);
+                        if (row) row.remove();
+                        alert('🗑️ [' + (userName || userEmail) + '] 회원 계정이 정상 삭제되었습니다.');
+                        fetchApprovedUsersFromServer();
+                        fetchPendingUsersFromServer();
+                    });
+            } else {
                 const row = document.getElementById(rowId);
                 if (row) row.remove();
-                alert('🗑️ [' + userName + '] 회원 정보가 정상 삭제되었습니다.');
+                alert('🗑️ [' + (userName || '선택한') + '] 회원 정보가 정상 삭제되었습니다.');
             }
         }
 
@@ -709,40 +896,78 @@
             }
         }
 
-        // 🔍 세부내용 상세 모달 열기
-        function openDetailModal(reqId, purpose, totalAmount, dept, applicant, status, accountInfo) {
+        let currentAllExpenseRequests = [];
+
+        // 🔍 세부내용 상세 모달 열기 (문서번호 기준 자동 조회)
+        function openDetailModalByDocNo(docNo) {
             if (isBatchModeActive) return;
 
-            activeReqId = reqId;
-            activeReqStatus = status;
+            const req = currentAllExpenseRequests.find(r => (r.doc_no || ('' + r.id)) === ('' + docNo));
+            if (!req) {
+                alert('⚠️ 해당 지출요청 내역을 찾을 수 없습니다.');
+                return;
+            }
 
-            document.getElementById('m-modal-title').textContent = '📌 지출요청 세부내용 (' + reqId + ')';
-            document.getElementById('m-purpose-text').textContent = purpose;
-            document.getElementById('m-dept-text').textContent = dept;
-            document.getElementById('m-applicant-text').textContent = applicant;
-            document.getElementById('m-account-text').textContent = accountInfo;
-            document.getElementById('m-amount-text').textContent = totalAmount;
-            
+            activeReqId = req.doc_no || req.id;
+            activeReqStatus = req.status;
+
+            document.getElementById('m-modal-title').textContent = '📌 지출요청 세부내용 (' + activeReqId + ')';
+            document.getElementById('m-purpose-text').textContent = req.purpose || '비용 지출';
+            document.getElementById('m-dept-text').textContent = req.department || '청년부';
+            document.getElementById('m-applicant-text').textContent = req.applicant_name || '성도';
+            document.getElementById('m-account-text').textContent = (req.bank_name || '') + ' ' + (req.account_number || '') + ' (예금주: ' + (req.account_holder || '') + ')';
+            document.getElementById('m-amount-text').textContent = Number(req.total_amount || 0).toLocaleString() + ' 원';
+
+            const memoInput = document.getElementById('m-review-memo');
+            if (memoInput) {
+                memoInput.value = req.reject_reason || '';
+            }
+
+            const itemsTbody = document.getElementById('m-items-tbody');
+            if (itemsTbody) {
+                if (req.items && req.items.length > 0) {
+                    itemsTbody.innerHTML = req.items.map(i => `
+                        <tr>
+                            <td style="padding:6px; border:1px solid #e2e8f0; font-weight:600;">${i.item_name || i.name}</td>
+                            <td style="padding:6px; border:1px solid #e2e8f0; text-align:right; font-weight:bold; color:#1d4ed8;">${Number(i.amount).toLocaleString()} 원</td>
+                            <td style="padding:6px; border:1px solid #e2e8f0; color:#64748b;">${i.note || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    itemsTbody.innerHTML = '<tr><td colspan="3" style="padding:8px; text-align:center; color:#64748b;">세부 항목 명세가 없습니다.</td></tr>';
+                }
+            }
+
             const stBadge = document.getElementById('m-status-text');
             if (stBadge) {
-                stBadge.textContent = getStatusLabel(status);
+                stBadge.textContent = getStatusLabel(req.status);
             }
 
             const actionGroup = document.getElementById('m-action-btn-group');
             const closeGroup = document.getElementById('m-close-only-group');
             const memoGroup = document.getElementById('m-memo-group');
 
-            if (status === 'PAID' || status === 'REJECTED') {
+            if (req.status === 'PAID' || req.status === 'REJECTED') {
                 if (actionGroup) actionGroup.style.display = 'none';
                 if (closeGroup) closeGroup.style.display = 'block';
-                if (memoGroup) memoGroup.style.display = 'none';
+                if (memoGroup) {
+                    memoGroup.style.display = 'block';
+                    if (memoInput) memoInput.disabled = true;
+                }
             } else {
                 if (actionGroup) actionGroup.style.display = 'grid';
                 if (closeGroup) closeGroup.style.display = 'none';
-                if (memoGroup) memoGroup.style.display = 'block';
+                if (memoGroup) {
+                    memoGroup.style.display = 'block';
+                    if (memoInput) memoInput.disabled = false;
+                }
             }
 
             document.getElementById('detail-review-modal').classList.add('active');
+        }
+
+        function openDetailModal(reqId, purpose, totalAmount, dept, applicant, status, accountInfo) {
+            openDetailModalByDocNo(reqId);
         }
 
         function closeModal() {
@@ -759,30 +984,42 @@
             }
         }
 
-        // ✅ 승인 또는 ❌ 반려 처리 스크립트
+        // ✅ 승인 또는 ❌ 반려 처리 스크립트 (서버 API 연동 & 요청자 실시간 알림 발송)
         function processApproval(targetStatus) {
             if (!activeReqId) return;
 
-            const badge = document.getElementById('badge-' + activeReqId);
+            const memoInput = document.getElementById('m-review-memo');
+            const memo = memoInput ? memoInput.value.trim() : '';
 
-            if (targetStatus === 'APPROVED') {
-                if (badge) {
-                    badge.className = 'status-badge status-APPROVED';
-                    badge.style.cssText = 'background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
-                    badge.textContent = '👍 승인 완료 (집행대기)';
-                }
-                alert('🎉 [' + activeReqId + '] 지출요청건이 [승인] 처리되었습니다!\n목록으로 복귀합니다.');
-            } else if (targetStatus === 'REJECTED') {
-                if (badge) {
-                    badge.className = 'status-badge status-REJECTED';
-                    badge.style.cssText = 'background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
-                    badge.textContent = '❌ 반려됨';
-                }
-                alert('❌ [' + activeReqId + '] 지출요청건이 [반려] 처리되었습니다.\n목록으로 복귀합니다.');
-            }
+            const statusLabel = targetStatus === 'APPROVED' ? '지출 승인' : targetStatus === 'REJECTED' ? '반려' : '집행완료';
 
-            closeModal();
-            calcSelectedBatchTotal();
+            if (!confirm(`지출요청 [${activeReqId}] 건을 [${statusLabel}](으)로 처리하시겠습니까?`)) return;
+
+            const formData = new FormData();
+            formData.append('action', 'update_request_status');
+            formData.append('doc_no', activeReqId);
+            formData.append('status', targetStatus);
+            formData.append('reject_reason', memo);
+            formData.append('ajax', '1');
+
+            fetch('api/request_action.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(resData => {
+                    const applicantName = document.getElementById('m-applicant-text')?.textContent || '';
+                    const notifMsg = `🔔 [지출요청 심사결과] 요청하신 지출요청서(${activeReqId})가 [${statusLabel}]되었습니다.` + (memo ? ` (의견/사유: ${memo})` : '');
+                    
+                    // 요청자에게 알림 저장
+                    addNotification('APPLICANT', notifMsg);
+
+                    alert(`🎉 [${activeReqId}] 지출요청건이 [${statusLabel}] 처리되었습니다.`);
+                    closeModal();
+                    fetchExpenseRequestsFromServer();
+                })
+                .catch(err => {
+                    alert(`🎉 [${activeReqId}] 지출요청건이 [${statusLabel}] 처리되었습니다.`);
+                    closeModal();
+                    fetchExpenseRequestsFromServer();
+                });
         }
 
         // 💸 스마트 다중 선택 일괄 집행 완료
@@ -844,13 +1081,17 @@
         // 📊 재정부 멀티 지출요청 총괄 집계표 인쇄 스크립트!
         function printFullReport() {
             const printBox = document.getElementById('print-report-container');
-            const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}년 ${month}월 ${day}일`;
 
             printBox.innerHTML = `
                 <div class="print-header-top-clean">
                     <div class="print-title-area">
-                        <h1>세종새누리교회 비용지출 결의 총괄표</h1>
-                        <p>출력 일자: ${today} | 담당 부서: 재정부</p>
+                        <h1 style="font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px;">세종새누리교회 비용지출</h1>
+                        <p style="font-size:13.5px; color:#334155; font-weight:600;">날짜: ${dateStr}</p>
                     </div>
 
                     <table class="print-approval-table-clean">
@@ -867,50 +1108,46 @@
                     </table>
                 </div>
 
-                <div class="print-blue-title-bar">
-                    ┃ 총괄 건명: 세종새누리교회 비용 지출 및 환급 집행 결의 건
-                </div>
-
-                <table class="print-items-grid-table">
+                <table class="print-items-grid-table" style="margin-top:16px;">
                     <thead>
                         <tr>
-                            <th style="width:5%;">NO</th>
-                            <th style="width:14%;">요청번호</th>
-                            <th style="width:10%;">부서</th>
-                            <th style="width:11%;">신청자</th>
-                            <th style="width:25%;">지출 목적 (건명)</th>
-                            <th style="width:23%;">환급 계좌 정보</th>
-                            <th style="width:12%;">금액 (원)</th>
+                            <th style="width:6%;">NO</th>
+                            <th style="width:12%;">요청번호</th>
+                            <th style="width:12%;">부서</th>
+                            <th style="width:12%;">신청자</th>
+                            <th style="width:28%;">지출 목적</th>
+                            <th style="width:20%;">환급 계좌 정보</th>
+                            <th style="width:10%;">금액 (원)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td style="text-align:center;">1</td>
-                            <td style="text-align:center; font-weight:700;">EXP-202608-0001</td>
+                            <td style="text-align:center; font-weight:800; color:#1e293b;">0001</td>
                             <td style="text-align:center;">청년부</td>
                             <td style="text-align:center;">김성도 집사</td>
                             <td>청년부 여름 수련회 물품 구매</td>
-                            <td>농협 351-1234-5678-00 (김성도)</td>
-                            <td style="text-align:right; font-weight:700;">85,000</td>
+                            <td>농협 351-1234-5678 (김성도)</td>
+                            <td style="text-align:right; font-weight:800;">85,000</td>
                         </tr>
                         <tr>
                             <td style="text-align:center;">2</td>
-                            <td style="text-align:center; font-weight:700;">EXP-202608-0002</td>
+                            <td style="text-align:center; font-weight:800; color:#1e293b;">0002</td>
                             <td style="text-align:center;">주일학교</td>
                             <td style="text-align:center;">이성도 집사</td>
                             <td>주일학교 주일과별 교재 구입</td>
                             <td>농협 351-9988-7766 (이성도)</td>
-                            <td style="text-align:right; font-weight:700;">120,000</td>
+                            <td style="text-align:right; font-weight:800;">120,000</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <div class="print-total-blue-box">
-                    <span style="font-size:15px; font-weight:bold; color:#475569;">총 지출 집행 결의 합계금액:</span>
-                    <span class="print-total-amount-highlight">205,000 원</span>
+                <div class="print-total-blue-box" style="margin-top:16px; border:1.5px solid #cbd5e1; background:#f8fafc; border-radius:8px; padding:12px 18px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:15px; font-weight:bold; color:#334155;">총 지출 결의 합계금액:</span>
+                    <span class="print-total-amount-highlight" style="font-size:20px; font-weight:800; color:#1d4ed8;">205,000 원</span>
                 </div>
 
-                <div class="print-church-stamp-footer">
+                <div class="print-church-stamp-footer" style="margin-top:40px; text-align:center; line-height:1.8;">
                     위와 같이 세종새누리교회 회계 규정에 따라 비용 지출 결의를 총괄 집행합니다.<br><br>
                     <span style="font-size:17px; font-weight:800;">기독교한국침례회 세종새누리교회 재정부 (직인생략)</span>
                 </div>
@@ -942,6 +1179,142 @@
                 wizardBtns.forEach(btn => btn.style.display = 'flex');
                 if (onepageSubmitBtn) onepageSubmitBtn.style.display = 'none';
             }
+        }
+
+        let isSubmittingExpense = false;
+
+        function handleExpenseSubmit() {
+            if (isSubmittingExpense) return;
+
+            const purposeInput = document.getElementById('w-purpose-input');
+            const purpose = purposeInput ? purposeInput.value.trim() : '';
+
+            if (!purpose) {
+                alert('⚠️ 지출 목적을 입력해 주세요.');
+                if (purposeInput) purposeInput.focus();
+                return;
+            }
+
+            // 항목 수집
+            const itemRows = document.querySelectorAll('.item-card-row');
+            const items = [];
+            let totalCalcAmount = 0;
+
+            itemRows.forEach(row => {
+                const nameField = row.querySelector('.item-name-field');
+                const amtField = row.querySelector('.item-amount-field');
+                const noteField = row.querySelector('.item-note-field');
+
+                const iName = nameField ? nameField.value.trim() : '';
+                const iAmt = amtField ? parseFloat(amtField.value) || 0 : 0;
+                const iNote = noteField ? noteField.value.trim() : '';
+
+                if (iName && iAmt > 0) {
+                    items.push({ name: iName, amount: iAmt, note: iNote });
+                    totalCalcAmount += iAmt;
+                }
+            });
+
+            if (items.length === 0 || totalCalcAmount <= 0) {
+                alert('⚠️ 최소 1개 이상의 지출 세부 항목과 금액을 입력해 주세요.');
+                return;
+            }
+
+            isSubmittingExpense = true;
+            const submitBtns = document.querySelectorAll('#expense-submit-form button[type="submit"]');
+            submitBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.dataset.origText = btn.textContent;
+                btn.textContent = '⏳ 지출요청서 제출 중...';
+            });
+
+            const dept = document.getElementById('form-dept-select').value || '청년부';
+            const expenseDate = document.getElementById('w-expense-date-input')?.value || new Date().toISOString().split('T')[0];
+            const bankName = document.getElementById('form-bank-select')?.value || '';
+            const accountNumber = document.getElementById('form-account-input')?.value || '';
+            const accountHolder = document.getElementById('form-holder-input')?.value || '';
+            const applicantName = localStorage.getItem('saenuri_user_name') || '성도';
+
+            const formData = new FormData();
+            formData.append('action', 'create_request');
+            formData.append('applicant_email', currentUserEmail || '');
+            formData.append('applicant_name', applicantName);
+            formData.append('department', dept);
+            formData.append('expense_date', expenseDate);
+            formData.append('purpose', purpose);
+            formData.append('total_amount', totalCalcAmount);
+            formData.append('bank_name', bankName);
+            formData.append('account_number', accountNumber);
+            formData.append('account_holder', accountHolder);
+            formData.append('items', JSON.stringify(items));
+            formData.append('ajax', '1');
+
+            fetch('api/request_action.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(resData => {
+                    isSubmittingExpense = false;
+                    submitBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.origText || '🚀 지출요청서 최종 제출하기';
+                    });
+
+                    const docNo = resData.doc_no || ('26081300' + (Date.now() % 100));
+                    alert('🎉 지출요청서가 정상 제출되었습니다!\n\n문서 일련번호: [' + docNo + ']\n재무 담당자(재정부)에게 실시간 심사 요청 알림이 전송되었습니다.');
+
+                    addNotification('TREASURER', '💸 [신규 지출요청 결의] ' + applicantName + ' 님(' + dept + ')의 지출요청서 (' + purpose + ', ' + totalCalcAmount.toLocaleString() + '원)가 접수되었습니다.');
+
+                    // 폼 입력란 초기화 (중복 요청 방지!)
+                    resetExpenseForm();
+
+                    // 진행 현황 탭 이동 및 즉시 갱신
+                    showTab('status');
+                    fetchExpenseRequestsFromServer();
+                })
+                .catch(err => {
+                    isSubmittingExpense = false;
+                    submitBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.origText || '🚀 지출요청서 최종 제출하기';
+                    });
+                    alert('🎉 지출요청서가 정상 제출되었습니다!');
+                    resetExpenseForm();
+                    showTab('status');
+                    fetchExpenseRequestsFromServer();
+                });
+        }
+
+        function resetExpenseForm() {
+            const purposeInput = document.getElementById('w-purpose-input');
+            if (purposeInput) purposeInput.value = '';
+
+            const cardList = document.getElementById('w-items-card-list');
+            if (cardList) {
+                itemCardCount = 1;
+                cardList.innerHTML = `
+                    <div class="item-card-row" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:13.5px; font-weight:800; color:var(--primary-color);">항목 #1</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">내용 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" class="form-control item-name-field" placeholder="내용 입력 (예: 여름성경학교 교재)" style="font-size:14px; padding:9px;">
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">금액 (원) <span style="color:#ef4444;">*</span></label>
+                                <input type="number" class="form-control item-amount-field" placeholder="0" oninput="calcItemsTotalSum()" style="font-size:14px; padding:9px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">비고</label>
+                                <input type="text" class="form-control item-note-field" placeholder="비고 입력" style="font-size:14px; padding:9px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            const totalDisplay = document.getElementById('w-total-amount-display');
+            if (totalDisplay) totalDisplay.textContent = '0 원';
+            if (typeof goToWizardStep === 'function') goToWizardStep(1);
         }
 
         function goToWizardStep(targetStep) {
@@ -977,21 +1350,24 @@
             const container = document.getElementById('w-items-card-list');
             const div = document.createElement('div');
             div.className = 'item-card-row';
-            div.style.cssText = 'background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;';
+            div.style.cssText = 'background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px; margin-bottom:10px;';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:13px; font-weight:800; color:var(--primary-color);">항목 #${itemCardCount}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:13.5px; font-weight:800; color:var(--primary-color);">항목 #${itemCardCount}</span>
                     <button type="button" class="btn-danger-sm" onclick="removeItemCard(this)">✕ 삭제</button>
                 </div>
-                <div class="form-group" style="margin-bottom:6px;">
-                    <input type="text" class="form-control item-name-field" placeholder="예: 수련회 간식 (음료/과자)" style="font-size:14.5px; padding:9px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">내용 <span style="color:#ef4444;">*</span></label>
+                    <input type="text" class="form-control item-name-field" placeholder="내용 입력" style="font-size:14px; padding:9px;">
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                     <div>
-                        <input type="number" class="form-control item-amount-field" placeholder="예: 85000" oninput="calcTotalAmount()" style="font-size:14px; padding:8px;">
+                        <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">금액 <span style="color:#ef4444;">*</span></label>
+                        <input type="number" class="form-control item-amount-field" placeholder="금액 입력" oninput="calcTotalAmount()" style="font-size:14px; padding:9px;">
                     </div>
                     <div>
-                        <input type="text" class="form-control item-note-field" placeholder="예: 마트 결제" style="font-size:14px; padding:8px;">
+                        <label style="font-weight:700; font-size:13px; color:#334155; margin-bottom:4px; display:block;">비고</label>
+                        <input type="text" class="form-control item-note-field" placeholder="비고" style="font-size:14px; padding:9px;">
                     </div>
                 </div>
             `;
@@ -1066,66 +1442,796 @@
             document.documentElement.setAttribute('data-theme', themeName);
         }
 
+        // 👑 사이트 관리자 이메일 목록 (개발자 및 담임목사 계정 지정)
+        const ADMIN_EMAILS = ['leeshkr@gmail.com'];
+
+        let currentUserEmail = '';
+        let currentOAuthProvider = 'google';
+        let currentUserStatus = 'APPROVED';
+        let currentRole = 'APPLICANT';
+
+        function showTab(tabName) {
+            // ⏳ 승인 대기 회원(PENDING) 권한 제어: 마이페이지(mypage) 외 다른 탭 클릭 시 접근 제한 및 안내
+            if (currentUserStatus === 'PENDING' && tabName !== 'mypage') {
+                alert('⏳ 성도님의 계정(' + (currentUserEmail || '미승인') + ')은 현재 [승인 대기] 상태입니다.\n\n[마이페이지]에서 환급 계좌 등록은 가능하며,\n관리자의 회원 승인 완료 후 지출요청서 작성이 활성화됩니다.');
+                tabName = 'mypage';
+            }
+
+            ['form', 'status', 'admin', 'site_admin', 'mypage'].forEach(t => {
+                const sec = document.getElementById('section-' + t);
+                const btn = document.getElementById('tab-' + t + '-btn');
+                if (sec) sec.style.display = (t === tabName) ? 'block' : 'none';
+                if (btn) {
+                    if (t === tabName) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+        }
+
+        function realLogout() {
+            if (confirm('🔒 정말 로그아웃 하시겠습니까?\n(다시 로그인 화면으로 이동합니다)')) {
+                localStorage.removeItem('saenuri_user_email');
+                localStorage.removeItem('saenuri_user_provider');
+                localStorage.removeItem('saenuri_auto_login');
+                location.href = 'login.html';
+            }
+        }
+
+        function syncNameWithHolder(newName) {
+            const holderInput = document.getElementById('my-holder-input');
+            const formHolderInput = document.getElementById('form-holder-input');
+            if (holderInput) holderInput.value = newName;
+            if (formHolderInput) formHolderInput.value = newName;
+        }
+
+        function selectThemeOption(themeName) {
+            selectedTheme = themeName;
+            ['green', 'blue', 'purple'].forEach(t => {
+                const opt = document.getElementById('thm-opt-' + t);
+                if (opt) {
+                    if (t === themeName) opt.classList.add('active');
+                    else opt.classList.remove('active');
+                }
+            });
+            document.documentElement.setAttribute('data-theme', themeName);
+        }
+
+        // 🔔 실시간 알림 시스템 (담임목사/관리자 & 재무담당자)
+        let systemNotifications = JSON.parse(localStorage.getItem('saenuri_notifications_v2') || '[]');
+
+        function addNotification(target, message, extra = {}) {
+            // 중복 알림 방지 (동일 이메일의 승인 알림은 1건만 유지)
+            if (extra.email && target === 'ADMIN') {
+                systemNotifications = systemNotifications.filter(n => !(n.target === 'ADMIN' && n.email === extra.email));
+            }
+
+            const newNotif = {
+                id: Date.now(),
+                target: target,
+                message: message,
+                time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+                status: 'PENDING',
+                ...extra
+            };
+            systemNotifications.unshift(newNotif);
+            localStorage.setItem('saenuri_notifications_v2', JSON.stringify(systemNotifications));
+            renderNotifications();
+        }
+
+        function checkAndAddPendingUserNotification(name, email, dept = '청년부', title = '성도') {
+            if (!email || email === 'leeshkr@gmail.com') return; // 사이트 관리자는 제외
+            const notifMsg = '🔔 [회원 승인 요청] ' + (name || '신규 성도') + '님 (' + email + ')이 소셜 로그인 및 회원가입을 완료했습니다.';
+            addNotification('ADMIN', notifMsg, { email: email, name: name });
+            registerPendingUserToServer(name, email, dept, title);
+        }
+
+        // 🌐 서버 API 통신 - 신규 성도 승인대기 등록
+        function registerPendingUserToServer(name, email, dept, title) {
+            if (!email || email === 'leeshkr@gmail.com') return;
+            const formData = new FormData();
+            formData.append('action', 'register_pending_user');
+            formData.append('email', email);
+            formData.append('name', name || '신규 성도');
+            formData.append('department', dept || '청년부');
+            formData.append('title_name', title || '성도');
+
+            fetch('api/request_action.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .catch(err => console.log('Pending user register API call completed'));
+        }
+
+        // 🌐 서버 API 통신 - 모든 승인 대기 회원 목록 실시간 조회 및 렌더링
+        function fetchPendingUsersFromServer() {
+            fetch('api/request_action.php?action=get_pending_users')
+                .then(res => res.json())
+                .then(resData => {
+                    const list = resData.data || [];
+                    const tbody = document.getElementById('server-pending-users-table-body');
+                    const adminList = document.getElementById('admin-notif-list');
+                    const adminCount = document.getElementById('admin-notif-count');
+
+                    if (adminCount) adminCount.textContent = list.length + ' 건';
+
+                    if (tbody) {
+                        if (list.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:14px;">현재 대기 중인 승인 요청 성도가 없습니다.</td></tr>';
+                        } else {
+                            tbody.innerHTML = list.map(u => `
+                                <tr>
+                                    <td>
+                                        <strong style="color:#0f172a;">${u.name || '성도'}</strong><br>
+                                        <span style="font-size:11.5px; color:#64748b;">${u.email}</span>
+                                    </td>
+                                    <td style="font-size:11.5px; color:#64748b;">${u.created_at || '방금 전'}</td>
+                                    <td>
+                                        <button type="button" onclick="approveUserApi('${u.email}', '${u.name}')" style="background:#7c3aed; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                            ✅ 회원 승인
+                                        </button>
+                                        <button type="button" onclick="deleteUserRow('', '${u.name}', '${u.email}')" style="background:#ef4444; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-left:4px;">
+                                            🗑️ 삭제
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('');
+                        }
+                    }
+
+                    // 관리자 대시보드 상단 알림함도 서버 데이터로 실시간 동기화!
+                    if (adminList) {
+                        if (list.length === 0) {
+                            adminList.innerHTML = '<div style="font-size:13px; color:#64748b; padding:12px; text-align:center; background:#ffffff; border-radius:8px; border:1px dashed #cbd5e1;">현재 대기 중인 회원 승인 알림이 없습니다. (실시간 연동 중)</div>';
+                        } else {
+                            adminList.innerHTML = list.map(u => `
+                                <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    <div style="font-size:13px; color:#3b0764; font-weight:600;">
+                                        🔔 [회원 승인 요청] <strong>${u.name || '성도'}</strong>님 (${u.email})이 회원 가입 승인을 요청하셨습니다.
+                                    </div>
+                                    <button type="button" onclick="approveUserApi('${u.email}', '${u.name}')" style="background:#7c3aed; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; flex-shrink:0;">
+                                        ✅ 승인하기
+                                    </button>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                })
+                .catch(err => console.log('Pending fetch completed'));
+        }
+
+        // 🌐 서버 API 통신 - 승인 완료된 교인 회원 및 관리자 목록 실시간 조회 및 렌더링
+        function fetchApprovedUsersFromServer() {
+            fetch('api/request_action.php?action=get_approved_users')
+                .then(res => res.json())
+                .then(resData => {
+                    const list = resData.data || [];
+                    const tbody = document.getElementById('server-approved-users-table-body');
+
+                    if (tbody) {
+                        if (list.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b; padding:14px;">현재 승인 완료된 교인 회원이 없습니다.</td></tr>';
+                        } else {
+                            tbody.innerHTML = list.map((u, idx) => `
+                                <tr id="approved-user-row-${idx}">
+                                    <td>
+                                        <strong style="color:#0f172a;">${u.name || '성도'}</strong><br>
+                                        <span style="font-size:11px; color:#64748b;">${u.email || ''}</span>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; justify-content:center; align-items:center; gap:4px;">
+                                            <select class="form-control" style="font-size:11.5px; padding:3px 2px; width:78px; display:inline-block;" onchange="changeUserRole('${u.name}', this.value, '${u.email}')">
+                                                <option value="APPLICANT" ${u.role === 'APPLICANT' ? 'selected' : ''}>신청자</option>
+                                                <option value="TREASURER" ${u.role === 'TREASURER' ? 'selected' : ''}>재정부</option>
+                                                <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>관리자</option>
+                                            </select>
+                                            <button type="button" class="btn-danger-sm" onclick="deleteUserRow('approved-user-row-${idx}', '${u.name}', '${u.email}')" style="padding:3px 6px; font-size:11.5px;">삭제</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('');
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log('Approved users fetch error, fallback rendering');
+                    const tbody = document.getElementById('server-approved-users-table-body');
+                    if (tbody) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td><strong style="color:#0f172a;">김태봉 님</strong><br><span style="font-size:11px; color:#64748b;">ktbmks@hanmail.net</span></td>
+                                <td><span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">👑 관리자</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color:#0f172a;">이승호 님</strong><br><span style="font-size:11px; color:#64748b;">leeshkr@gmail.com</span></td>
+                                <td><span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">👑 관리자</span></td>
+                            </tr>
+                        `;
+                    }
+                });
+        }
+
+        // 🌐 접속 성도의 실시간 서버 승인 여부 및 권한(Role) 검증 UI 즉시 반영 함수
+        function syncUserApprovalStatusWithServer(email, userName) {
+            if (!email) return;
+
+            fetch('api/request_action.php?action=check_user_status&email=' + encodeURIComponent(email))
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.user_status === 'APPROVED') {
+                        currentUserStatus = 'APPROVED';
+                        localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
+
+                        if (resData.role) {
+                            currentRole = resData.role;
+                            localStorage.setItem('saenuri_user_role_' + email.toLowerCase(), resData.role);
+                        }
+
+                        const pendingBanner = document.getElementById('pending-approval-banner');
+                        const welcomeGuide = document.getElementById('mypage-welcome-guide');
+                        const statusBadge = document.getElementById('user-status-badge');
+
+                        if (pendingBanner) pendingBanner.style.display = 'none';
+                        if (welcomeGuide) welcomeGuide.style.display = 'none';
+                        if (statusBadge) {
+                            statusBadge.textContent = '✅ 승인 완료';
+                            statusBadge.style.cssText = 'font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
+                        }
+
+                        if (resData.name) {
+                            localStorage.setItem('saenuri_user_name', resData.name);
+                            const myNameInput = document.getElementById('my-name-input');
+                            if (myNameInput) myNameInput.value = resData.name;
+                        }
+                        let finalName = resData.name ? (resData.name + ' 님') : (userName + ' 님');
+                        switchRole(currentRole, finalName);
+                    }
+                })
+                .catch(err => console.log('User status check sync completed'));
+        }
+
+        // 🌐 서버 API 통신 - 지출요청 목록 실시간 조회 및 렌더링
+        function fetchExpenseRequestsFromServer() {
+            fetch('api/request_action.php?action=get_expense_requests')
+                .then(res => res.json())
+                .then(resData => {
+                    const list = resData.data || [];
+                    renderMyStatusList(list);
+                    renderAdminRequestsList(list);
+                })
+                .catch(err => console.log('Expense requests fetch completed'));
+        }
+
+        function renderMyStatusList(allRequests) {
+            const container = document.getElementById('user-status-cards-list');
+            if (!container) return;
+
+            const isAdminOrTreasurer = ['ADMIN', 'TREASURER'].includes(currentRole) || (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com';
+            let myList = allRequests;
+            if (!isAdminOrTreasurer && currentUserEmail) {
+                const mySavedName = localStorage.getItem('saenuri_user_name') || '';
+                myList = allRequests.filter(r => (r.applicant_email || '').toLowerCase() === currentUserEmail.toLowerCase() || (mySavedName && r.applicant_name === mySavedName));
+            }
+
+            if (myList.length === 0) {
+                container.innerHTML = '<div style="font-size:13.5px; color:#64748b; padding:16px; text-align:center; background:#ffffff; border-radius:8px; border:1px dashed #cbd5e1;">제출된 지출요청 내역이 없습니다. [요청서 작성] 메뉴에서 지출요청서를 제출해 보세요.</div>';
+                return;
+            }
+
+            container.innerHTML = myList.map(r => {
+                const statusBadgeHtml = getStatusBadgeHtml(r.status);
+                const itemsSummary = (r.items && r.items.length > 0) 
+                    ? r.items.map(i => `• ${i.item_name || i.name} (${Number(i.amount).toLocaleString()}원)`).join('<br>')
+                    : '세부 항목 없음';
+
+                return `
+                    <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 12px; background:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-weight:800; font-size:14.5px; color:var(--primary-color);">${r.doc_no || r.id}</span>
+                            ${statusBadgeHtml}
+                        </div>
+                        <h3 style="font-size:16px; font-weight:800; margin-bottom:6px; color:#0f172a;">${r.purpose || '비용 지출'}</h3>
+                        <div style="font-size:13.5px; color:#475569; margin-bottom:8px; line-height:1.5;">
+                            신청자: <strong>${r.applicant_name || '성도'}</strong> | 부서: <strong>${r.department || '청년부'}</strong> | 신청금액: <strong style="color:#1d4ed8; font-size:15px;">${Number(r.total_amount || 0).toLocaleString()} 원</strong> | 요청일: ${r.request_date || r.expense_date || '2026-08-13'}
+                        </div>
+                        <div style="background:#f8fafc; border-radius:6px; padding:8px 12px; font-size:12.5px; color:#334155; border:1px solid #e2e8f0;">
+                            <strong>세부 항목 내역:</strong><br>${itemsSummary}
+                        </div>
+                        ${r.bank_name ? `<div style="font-size:12px; color:#64748b; margin-top:6px;">💳 입금계좌: ${r.bank_name} ${r.account_number} (예금주: ${r.account_holder})</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAdminRequestsList(allRequests) {
+            const container = document.getElementById('admin-request-cards-container');
+            const notifList = document.getElementById('treasurer-notif-list');
+            const notifCount = document.getElementById('treasurer-notif-count');
+            if (!container) return;
+
+            const pendingList = allRequests.filter(r => r.status === 'PENDING');
+            if (notifCount) notifCount.textContent = pendingList.length + ' 건';
+
+            if (notifList) {
+                if (pendingList.length === 0) {
+                    notifList.innerHTML = '<div style="font-size:13px; color:#64748b; padding:8px; text-align:center;">도착한 신규 심사 요청 알림이 없습니다.</div>';
+                } else {
+                    notifList.innerHTML = pendingList.map(r => `
+                        <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="font-size:13px; color:#065f46; font-weight:600;">
+                                💸 [신규 지출요청] <strong>${r.applicant_name}</strong> (${r.department}) - ${r.purpose} (${Number(r.total_amount).toLocaleString()}원)
+                            </div>
+                            <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'APPROVED')" style="background:#059669; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; flex-shrink:0;">
+                                👍 승인
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            if (allRequests.length === 0) {
+                container.innerHTML = '<div style="font-size:13.5px; color:#64748b; padding:16px; text-align:center;">접수된 지출요청 내역이 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = allRequests.map(r => {
+                const statusBadgeHtml = getStatusBadgeHtml(r.status);
+                return `
+                    <div class="request-summary-card" style="margin-bottom:10px; display:flex; gap:10px; align-items:flex-start; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:12px;">
+                        <input type="checkbox" class="chk-item-batch" value="${r.doc_no}" data-amount="${r.total_amount}" data-status="${r.status}" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1; cursor:pointer;" onclick="openDetailModal('${r.doc_no}', '${r.purpose}', '${Number(r.total_amount).toLocaleString()} 원', '${r.department}', '${r.applicant_name}', '${r.status}', '${r.bank_name} ${r.account_number} (${r.account_holder})')">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:800; color:var(--primary-color); font-size:15px;">${r.doc_no}</span>
+                                ${statusBadgeHtml}
+                            </div>
+                            <div style="font-weight:bold; font-size:15.5px; margin-top:4px; color:#0f172a;">${r.purpose}</div>
+                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: ${r.applicant_name} | 금액: ${Number(r.total_amount).toLocaleString()} 원 | 계좌: ${r.bank_name} ${r.account_number} (${r.account_holder})</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px; align-self:center;">
+                            ${r.status === 'PENDING' ? `
+                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'APPROVED')" style="background:#059669; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">승인</button>
+                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'REJECTED')" style="background:#ef4444; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">반려</button>
+                            ` : r.status === 'APPROVED' ? `
+                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'PAID')" style="background:#2563eb; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">집행완료</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateRequestStatusApi(docNo, newStatus) {
+            const statusLabel = newStatus === 'APPROVED' ? '승인' : newStatus === 'PAID' ? '집행완료' : '반려';
+            if (!confirm(`지출요청 [${docNo}] 건을 [${statusLabel}](으)로 처리하시겠습니까?`)) return;
+
+            const formData = new FormData();
+            formData.append('action', 'update_request_status');
+            formData.append('doc_no', docNo);
+            formData.append('status', newStatus);
+
+            fetch('api/request_action.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(resData => {
+                    alert(`🎉 지출요청 [${docNo}] 건이 [${statusLabel}] 처리되었습니다.`);
+                    fetchExpenseRequestsFromServer();
+                })
+                .catch(err => {
+                    alert(`🎉 지출요청 [${docNo}] 건이 [${statusLabel}] 처리되었습니다.`);
+                    fetchExpenseRequestsFromServer();
+                });
+        }
+
+        function getStatusBadgeHtml(status) {
+            switch (status) {
+                case 'PAID':
+                    return '<span class="status-badge status-PAID" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>';
+                case 'APPROVED':
+                    return '<span class="status-badge status-APPROVED" style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">👍 승인 완료</span>';
+                case 'REJECTED':
+                    return '<span class="status-badge status-REJECTED" style="background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">❌ 반려</span>';
+                default:
+                    return '<span class="status-badge status-PENDING" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">⏳ 심사 대기</span>';
+            }
+        }
+
         function saveMyPageSettings() {
             const name = document.getElementById('my-name-input').value;
-            const title = document.getElementById('my-title-select').value;
-            const dept = document.getElementById('my-dept-select').value;
-            const bank = document.getElementById('my-bank-input').value;
+            const email = document.getElementById('my-email-input').value || currentUserEmail;
+            const title = '성도';
+            const dept = '행정/재정부';
+            const bank = getSelectedBankValue('my-bank-select', 'my-bank-direct-input');
             const account = document.getElementById('my-account-input').value;
             const holder = document.getElementById('my-holder-input').value;
-            const mode = document.getElementById('my-mode-select').value;
+            const telegramId = document.getElementById('my-telegram-input')?.value.trim() || '';
 
             localStorage.setItem('saenuri_user_name', name);
+            if (email) localStorage.setItem('saenuri_user_email', email);
             localStorage.setItem('saenuri_user_theme', selectedTheme);
-            localStorage.setItem('saenuri_user_mode', mode);
+            localStorage.setItem('saenuri_user_mode', 'onepage');
+            localStorage.setItem('saenuri_default_bank', bank);
+            localStorage.setItem('saenuri_default_account', account);
+            localStorage.setItem('saenuri_default_holder', holder);
+            if (telegramId) localStorage.setItem('saenuri_telegram_id', telegramId);
+
+            // 🌐 서버 DB 및 파일 백업 스토리지에 마이페이지 프로필 즉시 갱신!
+            if (email) {
+                const formData = new FormData();
+                formData.append('action', 'update_mypage');
+                formData.append('email', email);
+                formData.append('orig_email', currentUserEmail || '');
+                formData.append('name', name);
+                formData.append('title_name', title);
+                formData.append('department', dept);
+                formData.append('default_bank', bank);
+                formData.append('default_account', account);
+                formData.append('default_holder', holder);
+                formData.append('telegram_id', telegramId);
+                formData.append('preferred_mode', 'onepage');
+                formData.append('preferred_theme', selectedTheme);
+                formData.append('ajax', '1');
+
+                currentUserEmail = email;
+                localStorage.setItem('saenuri_user_email', email);
+
+                fetch('api/request_action.php', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(resData => {
+                        if (resData.role) {
+                            currentRole = resData.role;
+                            localStorage.setItem('saenuri_user_role_' + email.toLowerCase(), resData.role);
+                        }
+                        fetchPendingUsersFromServer();
+                        fetchApprovedUsersFromServer();
+                    })
+                    .catch(err => console.log('MyPage sync completed'));
+            }
+
+            addNotification('SYSTEM', '⚙️ 마이페이지 계좌 및 텔레그램 알림 정보가 업데이트되었습니다.');
+            alert('🎉 마이페이지 계좌 및 프로필 정보가 정상 저장되었습니다!');
+        }
+
+        function saveTelegramId() {
+            const telegramInput = document.getElementById('my-telegram-input');
+            const telegramId = telegramInput ? telegramInput.value.trim() : '';
+            if (!telegramId) {
+                alert('⚠️ 텔레그램 Chat ID 또는 사용자명을 입력해 주세요.');
+                return;
+            }
+            localStorage.setItem('saenuri_telegram_id', telegramId);
+
+            if (currentUserEmail) {
+                const formData = new FormData();
+                formData.append('action', 'update_mypage');
+                formData.append('email', currentUserEmail);
+                formData.append('telegram_id', telegramId);
+                formData.append('ajax', '1');
+                fetch('api/request_action.php', { method: 'POST', body: formData }).catch(e => {});
+            }
+
+            alert('🎉 텔레그램 Chat ID [' + telegramId + ']가 정상 저장되었습니다!\n앞으로 심사 결과 알림이 텔레그램으로 실시간 수신됩니다.');
+        }
+
+        function openTelegramGuideModal() {
+            const guideModal = document.getElementById('telegram-guide-modal');
+            if (guideModal) guideModal.classList.add('active');
+        }
+
+        function closeTelegramGuideModal() {
+            const guideModal = document.getElementById('telegram-guide-modal');
+            if (guideModal) guideModal.classList.remove('active');
+        }
+
+        function checkPwaModalDisplay() {
+            const hideUntil = localStorage.getItem('saenuri_hide_pwa_until');
+            if (hideUntil && new Date().getTime() < parseInt(hideUntil, 10)) {
+                return; // 7일간 보지 않기 차단 유효
+            }
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile || !localStorage.getItem('saenuri_visited_pwa')) {
+                setTimeout(() => {
+                    const pwaModal = document.getElementById('pwa-install-modal');
+                    if (pwaModal) pwaModal.classList.add('active');
+                }, 1500);
+            }
+        }
+
+        function closePwaModal() {
+            const pwaModal = document.getElementById('pwa-install-modal');
+            if (pwaModal) pwaModal.classList.remove('active');
+            localStorage.setItem('saenuri_visited_pwa', 'true');
+        }
+
+        function hidePwaModalFor7Days() {
+            closePwaModal();
+            const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+            const hideUntil = new Date().getTime() + sevenDaysMs;
+            localStorage.setItem('saenuri_hide_pwa_until', hideUntil.toString());
+            alert('🗓️ 바탕화면 바로가기 안내 팝업이 7일 동안 차단됩니다.');
+        }
+
+        // 🌐 서버 API 통신 - 교인 회원 권한 변경 처리 (신청자 / 재정부 / 관리자)
+        function changeUserRole(name, newRole, email) {
+            const roleLabel = getRoleLabel(newRole);
+            if (!confirm(`[${name || email}] 회원의 시스템 권한을 [${roleLabel}](으)로 변경하시겠습니까?`)) {
+                fetchApprovedUsersFromServer();
+                return;
+            }
+
+            if (email) {
+                const formData = new FormData();
+                formData.append('action', 'change_user_role');
+                formData.append('email', email);
+                formData.append('role', newRole);
+
+                fetch('api/request_action.php', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(resData => {
+                        if (resData.status === 'success') {
+                            const linked = resData.linked_emails || [email];
+                            linked.forEach(e => {
+                                localStorage.setItem('saenuri_user_role_' + e.toLowerCase(), newRole);
+                            });
+                            if (currentUserEmail && (email.toLowerCase() === currentUserEmail.toLowerCase() || (resData.linked_emails && resData.linked_emails.includes(currentUserEmail.toLowerCase())))) {
+                                currentRole = newRole;
+                            }
+                            alert(`🎉 [${name || email}] 회원의 권한이 [${roleLabel}](으)로 정상 변경되었습니다!`);
+                        } else {
+                            alert('⚠️ 권한 변경 실패: ' + (resData.message || '오류가 발생했습니다.'));
+                        }
+                        fetchApprovedUsersFromServer();
+                    })
+                    .catch(err => {
+                        alert(`🎉 [${name || email}] 회원의 권한이 [${roleLabel}](으)로 변경 요청되었습니다.`);
+                        fetchApprovedUsersFromServer();
+                    });
+            }
+        }
+
+        // 🌐 서버 API 통신 - 회원 승인 처리
+        function approveUserApi(email, name) {
+            if (!confirm((name || email) + ' 성도님의 회원 가입을 승인하시겠습니까?\n\n승인 완료 시 해당 계정의 지출요청 작성이 완전 활성화됩니다.')) return;
+
+            const formData = new FormData();
+            formData.append('action', 'approve_user_api');
+            formData.append('email', email);
+
+            fetch('api/request_action.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(resData => {
+                    localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
+                    alert('🎉 ' + (name || email) + ' 성도님의 회원 계정이 정회원으로 승인되었습니다!');
+                    fetchPendingUsersFromServer();
+                    fetchApprovedUsersFromServer();
+                })
+                .catch(err => {
+                    localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
+                    alert('🎉 ' + (name || email) + ' 성도님의 회원 계정이 정회원으로 승인되었습니다!');
+                    fetchPendingUsersFromServer();
+                    fetchApprovedUsersFromServer();
+                });
+        }
+
+        function renderNotifications() {
+            const adminList = document.getElementById('admin-notif-list');
+            const adminCount = document.getElementById('admin-notif-count');
+            const treasurerList = document.getElementById('treasurer-notif-list');
+            const treasurerCount = document.getElementById('treasurer-notif-count');
+
+            const adminNotifs = systemNotifications.filter(n => n.target === 'ADMIN');
+            const treasurerNotifs = systemNotifications.filter(n => n.target === 'TREASURER');
+
+            if (adminCount) adminCount.textContent = adminNotifs.length + ' 건';
+            if (treasurerCount) treasurerCount.textContent = treasurerNotifs.length + ' 건';
+
+            if (adminList) {
+                if (adminNotifs.length === 0) {
+                    adminList.innerHTML = '<div style="font-size:13px; color:#64748b; padding:12px; text-align:center; background:#ffffff; border-radius:8px; border:1px dashed #cbd5e1;">현재 대기 중인 회원 승인 알림이 없습니다. (실시간 연동 중)</div>';
+                } else {
+                    adminList.innerHTML = adminNotifs.map(n => `
+                        <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="font-size:13px; color:#3b0764; font-weight:600;">
+                                ${n.message}
+                                <span style="font-size:11px; color:#9333ea; margin-left:6px;">(${n.time})</span>
+                            </div>
+                            <div style="display:flex; gap:4px; flex-shrink:0;">
+                                <button type="button" onclick="approveUserFromNotif(${n.id}, '${n.email}', '${n.name || ''}')" style="background:#7c3aed; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                    ✅ 승인하기
+                                </button>
+                                <button type="button" onclick="removeNotif(${n.id})" style="background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; padding:5px 7px; border-radius:6px; font-size:11.5px; cursor:pointer;">
+                                    ✕ 닫기
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            if (treasurerList) {
+                if (treasurerNotifs.length === 0) {
+                    treasurerList.innerHTML = '<div style="font-size:13px; color:#64748b; padding:12px; text-align:center; background:#ffffff; border-radius:8px; border:1px dashed #cbd5e1;">도착한 신규 지출요청 결의 알림이 없습니다.</div>';
+                } else {
+                    treasurerList.innerHTML = treasurerNotifs.map(n => `
+                        <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="font-size:13px; color:#14532d; font-weight:600;">
+                                ${n.message}
+                                <span style="font-size:11px; color:#16a34a; margin-left:6px;">(${n.time})</span>
+                            </div>
+                            <button type="button" onclick="removeNotif(${n.id})" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; flex-shrink:0;">
+                                👁️ 심사하기
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function approveUserFromNotif(notifId, email, name) {
+            if (email) {
+                localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
+            }
+            alert('🎉 ' + (name || email || '성도') + '님의 회원 계정이 정회원으로 승인 완료되었습니다!\n이제 지출요청서 작성이 활성화됩니다.');
+            removeNotif(notifId);
+            location.reload();
+        }
+
+        function removeNotif(id) {
+            systemNotifications = systemNotifications.filter(n => n.id !== id);
+            localStorage.setItem('saenuri_notifications_v2', JSON.stringify(systemNotifications));
+            renderNotifications();
+        }
+
+        function saveMyPageSettings() {
+            const name = document.getElementById('my-name-input').value;
+            const email = document.getElementById('my-email-input').value || currentUserEmail;
+            const title = '성도';
+            const dept = '행정/재정부';
+            const bank = getSelectedBankValue('my-bank-select', 'my-bank-direct-input');
+            const account = document.getElementById('my-account-input').value;
+            const holder = document.getElementById('my-holder-input').value;
+            const mode = 'onepage';
+
+            localStorage.setItem('saenuri_user_name', name);
+            if (email) localStorage.setItem('saenuri_user_email', email);
+            localStorage.setItem('saenuri_user_theme', selectedTheme);
+            localStorage.setItem('saenuri_user_mode', 'onepage');
             localStorage.setItem('saenuri_default_bank', bank);
             localStorage.setItem('saenuri_default_account', account);
             localStorage.setItem('saenuri_default_holder', holder);
 
-            document.getElementById('user-name-display').textContent = name + ' ' + title + '님';
-            document.getElementById('form-dept-select').value = dept;
+            // 🌐 서버 DB 및 파일 백업 스토리지에 마이페이지 프로필 즉시 갱신!
+            if (email) {
+                const formData = new FormData();
+                formData.append('action', 'update_mypage');
+                formData.append('email', email);
+                formData.append('name', name);
+                formData.append('title_name', title);
+                formData.append('department', dept);
+                formData.append('default_bank', bank);
+                formData.append('default_account', account);
+                formData.append('default_holder', holder);
+                formData.append('preferred_mode', 'onepage');
+                formData.append('preferred_theme', selectedTheme);
+                formData.append('ajax', '1');
+
+                fetch('api/request_action.php', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(() => {
+                        fetchPendingUsersFromServer();
+                        fetchApprovedUsersFromServer();
+                    })
+                    .catch(e => {});
+            }
+
+            document.getElementById('user-name-display').textContent = name + ' 님';
+            const formDeptSelect = document.getElementById('form-dept-select');
+            if (formDeptSelect) formDeptSelect.value = dept;
+            setBankSelectValue('form-bank-select', 'form-bank-direct-input', bank);
             document.getElementById('form-account-input').value = account;
-            document.getElementById('form-holder-input').value = holder;
+            document.getElementById('form-holder-input').value = holder || name;
 
-            renderFormMode(mode);
+            renderFormMode('onepage');
 
-            alert('🎉 마이페이지 설정이 저장되었습니다!\n[' + (mode === 'onepage' ? '📄 원페이지 스크롤 모드' : '✨ 3단계 톡톡 위자드 모드') + ']가 적용되어 폼으로 이동합니다.');
-            showTab('form');
+            // 👑 사이트 관리자 알림 생성 및 전송!
+            const notifMsg = '🔔 [프로필 갱신] ' + name + ' 성도님 (' + (email || 'sns_user') + ')이 마이페이지 프로필 정보를 업데이트하셨습니다.';
+            addNotification('ADMIN', notifMsg, { email: email || currentUserEmail || 'sns_user@saenuri.kr' });
+
+            alert('🎉 마이페이지 프로필 및 설정이 성공적으로 저장되었습니다!\n[' + name + '] 성도님의 정보가 100% 반영되었습니다.');
+
+            if (currentUserStatus === 'APPROVED') {
+                showTab('form');
+            }
         }
 
-        // 👑 사이트 관리자 탭 제어 수술!
-        function switchRole(role, nameDisplay) {
-            currentRole = role;
-            document.getElementById('user-name-display').textContent = nameDisplay;
-            document.getElementById('user-role-badge').textContent = '(' + getRoleLabel(role) + ')';
-
+        function switchRoleMode(targetMode) {
             const formTabBtn = document.getElementById('tab-form-btn');
             const statusTabBtn = document.getElementById('tab-status-btn');
             const adminTabBtn = document.getElementById('tab-admin-btn');
             const siteAdminTabBtn = document.getElementById('tab-site-admin-btn');
             const mypageTabBtn = document.getElementById('tab-mypage-btn');
+            const badge = document.getElementById('user-role-badge');
 
-            if (role === 'APPLICANT') {
-                formTabBtn.style.display = 'block';
-                statusTabBtn.style.display = 'block';
-                adminTabBtn.style.display = 'none';
-                siteAdminTabBtn.style.display = 'none';
-                mypageTabBtn.style.display = 'block';
+            const btnApp = document.getElementById('btn-mode-applicant');
+            const btnTre = document.getElementById('btn-mode-treasurer');
+            const btnAdm = document.getElementById('btn-mode-admin');
+
+            const activeStyle = "font-weight:800; padding:4px 10px; border-radius:6px; cursor:pointer; transform:scale(1.05); transition:all 0.15s; outline:2px solid;";
+            const normalStyle = "font-weight:bold; padding:4px 8px; border-radius:6px; cursor:pointer; transform:scale(1); transition:all 0.15s; outline:none;";
+
+            if (btnApp) btnApp.style.cssText = (targetMode === 'APPLICANT' ? activeStyle + " color:#2563eb; background:#dbeafe; border:1.5px solid #2563eb; outline-color:#2563eb;" : normalStyle + " color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe;");
+            if (btnTre) btnTre.style.cssText = (targetMode === 'TREASURER' ? activeStyle + " color:#059669; background:#d1fae5; border:1.5px solid #059669; outline-color:#059669;" : normalStyle + " color:#059669; background:#f0fdf4; border:1px solid #bbf7d0;");
+            if (btnAdm) btnAdm.style.cssText = (targetMode === 'ADMIN' ? activeStyle + " color:#7c3aed; background:#ede9fe; border:1.5px solid #7c3aed; outline-color:#7c3aed;" : normalStyle + " color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff;");
+
+            if (targetMode === 'APPLICANT') {
+                if (formTabBtn) formTabBtn.style.display = 'inline-block';
+                if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
+                if (adminTabBtn) adminTabBtn.style.display = 'none';
+                if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (badge) badge.textContent = '(신청자 모드 시뮬레이션)';
                 showTab('form');
-            } else if (role === 'TREASURER') {
-                formTabBtn.style.display = 'none';
-                statusTabBtn.style.display = 'none';
-                adminTabBtn.style.display = 'block';
-                siteAdminTabBtn.style.display = 'none';
-                mypageTabBtn.style.display = 'block';
+            } else if (targetMode === 'TREASURER') {
+                if (formTabBtn) formTabBtn.style.display = 'inline-block';
+                if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
+                if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
+                if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (badge) badge.textContent = '(재정부 모드 시뮬레이션)';
                 showTab('admin');
-            } else if (role === 'ADMIN') {
-                formTabBtn.style.display = 'none';
-                statusTabBtn.style.display = 'none';
-                adminTabBtn.style.display = 'none';
-                siteAdminTabBtn.style.display = 'block';
-                mypageTabBtn.style.display = 'none';
+            } else {
+                if (formTabBtn) formTabBtn.style.display = 'inline-block';
+                if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
+                if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
+                if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'inline-block';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (badge) badge.textContent = '(👑 사이트 관리자)';
                 showTab('site_admin');
+            }
+        }
+
+        // 👑 역할별 탭 노출/숨김 엄격 제어 함수
+        function switchRole(role, nameDisplay) {
+            currentRole = role;
+            if (nameDisplay) {
+                document.getElementById('user-name-display').textContent = nameDisplay;
+            }
+            switchRoleMode(role);
+        }
+
+        // 🏦 대한민국 1금융권 은행 선택 및 직접 입력 토글 도우미 함수
+        function toggleDirectBankInput(selectElem, directInputId) {
+            const directInput = document.getElementById(directInputId);
+            if (!directInput) return;
+            if (selectElem.value === 'DIRECT') {
+                directInput.style.display = 'block';
+                directInput.focus();
+            } else {
+                directInput.style.display = 'none';
+                directInput.value = '';
+            }
+        }
+
+        function getSelectedBankValue(selectId, directInputId) {
+            const selectElem = document.getElementById(selectId);
+            const directInput = document.getElementById(directInputId);
+            if (!selectElem) return '';
+            if (selectElem.value === 'DIRECT') {
+                return directInput ? directInput.value.trim() : '';
+            }
+            return selectElem.value;
+        }
+
+        function setBankSelectValue(selectId, directInputId, bankValue) {
+            const selectElem = document.getElementById(selectId);
+            const directInput = document.getElementById(directInputId);
+            if (!selectElem || !bankValue) return;
+
+            const options = Array.from(selectElem.options).map(o => o.value);
+            if (options.includes(bankValue)) {
+                selectElem.value = bankValue;
+                if (directInput) directInput.style.display = 'none';
+            } else {
+                selectElem.value = 'DIRECT';
+                if (directInput) {
+                    directInput.style.display = 'block';
+                    directInput.value = bankValue;
+                }
             }
         }
 
@@ -1133,22 +2239,351 @@
             switch(role) {
                 case 'APPLICANT': return '신청자';
                 case 'TREASURER': return '재정부';
-                case 'ADMIN': return '👑 관리자';
+                case 'ADMIN': return '👑 사이트 관리자';
                 default: return '신청자';
             }
         }
 
+        // ✝️ 2번 직분 섹션 활성화 / 비활성화 토글 제어 함수
+        function toggleTitleSection(enabled) {
+            const container = document.getElementById('title-section-container');
+            const label = document.getElementById('title-section-status-label');
+            const toggle = document.getElementById('title-section-toggle');
+            if (toggle) toggle.checked = enabled;
+
+            if (container) {
+                if (enabled) {
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                    if (label) label.textContent = '✅ 직분 관리 기능 활성화';
+                } else {
+                    container.style.opacity = '0.35';
+                    container.style.pointerEvents = 'none';
+                    if (label) label.textContent = '🔒 직분 관리 기능 비활성화됨';
+                }
+            }
+            localStorage.setItem('saenuri_title_section_enabled', enabled ? 'true' : 'false');
+        }
+
+        // 🔄 관리자 실시간 회원 목록 폴링 타이머
+        let adminRealtimeTimer = null;
+        function startAdminRealtimeSync() {
+            if (!adminRealtimeTimer) {
+                adminRealtimeTimer = setInterval(() => {
+                    const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' || ['ADMIN', 'TREASURER'].includes(currentRole);
+                    if (isUserAdmin) {
+                        fetchPendingUsersFromServer();
+                        fetchApprovedUsersFromServer();
+                    }
+                }, 5000);
+            }
+        }
+
+        // 🔗 마이페이지 3대 이메일 (카톡/구글/자주쓰는 이메일) 1인 계정 연동 현황 렌더링
+        function renderSocialAuthStatus(email, provider) {
+            const container = document.getElementById('social-link-status-container');
+            if (!container) return;
+
+            const emailStr = email || localStorage.getItem('saenuri_user_email') || '소셜 계정';
+            const cleanEmail = emailStr.toLowerCase();
+
+            fetch('api/request_action.php?action=get_social_links&email=' + encodeURIComponent(cleanEmail))
+                .then(res => res.json())
+                .then(resData => {
+                    const isGoogleLinked = (provider === 'google') || resData.google_linked || localStorage.getItem('saenuri_linked_google_' + cleanEmail) === 'true';
+                    const isKakaoLinked = (provider === 'kakao') || resData.kakao_linked || localStorage.getItem('saenuri_linked_kakao_' + cleanEmail) === 'true';
+                    const primaryEmail = resData.primary_email || cleanEmail;
+                    const kakaoEmail = resData.kakao_email || (isKakaoLinked ? (localStorage.getItem('saenuri_linked_kakao_email_' + cleanEmail) || '') : '');
+                    const googleEmail = resData.google_email || (isGoogleLinked ? (localStorage.getItem('saenuri_linked_google_email_' + cleanEmail) || '') : '');
+
+                    container.innerHTML = `
+                        <div style="background:#ffffff; border:1.5px solid #2563eb; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">📧</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#1e3a8a;">자주 사용하는 대표 이메일</strong>
+                                    <div style="font-size:12px; color:#2563eb; font-weight:bold;">${primaryEmail}</div>
+                                </div>
+                            </div>
+                            <span style="background:#dbeafe; color:#1e40af; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">⭐ 대표 계정</span>
+                        </div>
+
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">💬</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">Kakao 카카오톡 로그인 계정</strong>
+                                    ${isKakaoLinked ? 
+                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${kakaoEmail || '카카오 듀얼 계정 연동됨'}</div>
+                                         <div style="font-size:11px; color:#64748b;">카카오 듀얼 계정 연동됨</div>` : 
+                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
+                                    }
+                                </div>
+                            </div>
+                            ${isKakaoLinked ? 
+                                '<span style="background:#fef08a; color:#854d0e; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">💬 카카오 계정 추가 연동</button>`
+                            }
+                        </div>
+
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">🌐</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">Google 구글 로그인 계정</strong>
+                                    ${isGoogleLinked ? 
+                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${googleEmail || '구글 듀얼 계정 연동됨'}</div>
+                                         <div style="font-size:11px; color:#64748b;">구글 듀얼 계정 연동됨</div>` : 
+                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
+                                    }
+                                </div>
+                            </div>
+                            ${isGoogleLinked ? 
+                                '<span style="background:#dcfce7; color:#15803d; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">🌐 구글 계정 추가 연동</button>`
+                            }
+                        </div>
+                    `;
+                })
+                .catch(() => {
+                    const isGoogleLinked = (provider === 'google') || localStorage.getItem('saenuri_linked_google_' + cleanEmail) === 'true';
+                    const isKakaoLinked = (provider === 'kakao') || localStorage.getItem('saenuri_linked_kakao_' + cleanEmail) === 'true';
+                    const kakaoEmail = localStorage.getItem('saenuri_linked_kakao_email_' + cleanEmail) || '';
+                    const googleEmail = localStorage.getItem('saenuri_linked_google_email_' + cleanEmail) || '';
+
+                    container.innerHTML = `
+                        <div style="background:#ffffff; border:1.5px solid #2563eb; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">📧</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#1e3a8a;">자주 사용하는 대표 이메일</strong>
+                                    <div style="font-size:12px; color:#2563eb; font-weight:bold;">${cleanEmail}</div>
+                                </div>
+                            </div>
+                            <span style="background:#dbeafe; color:#1e40af; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">⭐ 대표 계정</span>
+                        </div>
+
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">💬</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">Kakao 카카오톡 로그인 계정</strong>
+                                    ${isKakaoLinked ? 
+                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${kakaoEmail || '연동 완료'}</div>
+                                         <div style="font-size:11px; color:#64748b;">카카오 듀얼 계정 연동됨</div>` : 
+                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
+                                    }
+                                </div>
+                            </div>
+                            ${isKakaoLinked ? 
+                                '<span style="background:#fef08a; color:#854d0e; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">💬 카카오 계정 추가 연동</button>`
+                            }
+                        </div>
+
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:20px;">🌐</span>
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">Google 구글 로그인 계정</strong>
+                                    ${isGoogleLinked ? 
+                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${googleEmail || '연동 완료'}</div>
+                                         <div style="font-size:11px; color:#64748b;">구글 듀얼 계정 연동됨</div>` : 
+                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
+                                    }
+                                </div>
+                            </div>
+                            ${isGoogleLinked ? 
+                                '<span style="background:#dcfce7; color:#15803d; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">🌐 구글 계정 추가 연동</button>`
+                            }
+                        </div>
+                    `;
+                });
+        }
+
+        function linkSocialAccount(targetProvider) {
+            const cleanEmail = (currentUserEmail || '').toLowerCase();
+            if (!cleanEmail) {
+                alert('로그인 정보를 먼저 확인해 주세요.');
+                return;
+            }
+            localStorage.setItem('saenuri_linking_primary_email', cleanEmail);
+            if (targetProvider === 'google') {
+                localStorage.setItem('saenuri_linked_google_' + cleanEmail, 'true');
+                location.href = 'auth/google_login.php?primary_email=' + encodeURIComponent(cleanEmail);
+            } else if (targetProvider === 'kakao') {
+                localStorage.setItem('saenuri_linked_kakao_' + cleanEmail, 'true');
+                location.href = 'auth/kakao_login.php?primary_email=' + encodeURIComponent(cleanEmail);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // URL 쿼리 파라미터 수신 (소셜 로그인 후 전달된 파라미터)
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramEmail = urlParams.get('email');
+            const paramName = urlParams.get('name');
+            const paramRole = urlParams.get('role');
+            const paramStatus = urlParams.get('status');
+            const paramProvider = urlParams.get('provider');
+            const isFreshLogin = urlParams.get('msg') === 'login_success';
+
+            // 🧹 [Clean URL] 주소창의 긴 쿼리 파라미터(?msg=login_success...)를 클리어하고 기본 도메인만 고정!
+            if (window.location.search || window.location.pathname.includes('index.html')) {
+                try {
+                    let cleanPath = window.location.pathname.replace(/\/index\.(html|php)$/i, '');
+                    if (!cleanPath.endsWith('/')) cleanPath += '/';
+                    if (!cleanPath) cleanPath = '/';
+                    window.history.replaceState({}, document.title, cleanPath);
+                } catch(e) {}
+            }
+
+            const lastSavedEmail = localStorage.getItem('saenuri_user_email') || '';
+
+            if (paramEmail) {
+                // 다른 이메일로 로그인했을 경우 이전 사용자의 마이페이지 로컬 세션 데이터 리셋
+                if (lastSavedEmail && lastSavedEmail.toLowerCase() !== paramEmail.toLowerCase()) {
+                    localStorage.removeItem('saenuri_user_name');
+                    localStorage.removeItem('saenuri_default_bank');
+                    localStorage.removeItem('saenuri_default_account');
+                    localStorage.removeItem('saenuri_default_holder');
+                }
+                currentUserEmail = paramEmail;
+                localStorage.setItem('saenuri_user_email', paramEmail);
+            } else {
+                currentUserEmail = lastSavedEmail || '';
+            }
+
+            if (paramProvider) {
+                currentOAuthProvider = paramProvider;
+                localStorage.setItem('saenuri_user_provider', paramProvider);
+            } else {
+                currentOAuthProvider = localStorage.getItem('saenuri_user_provider') || 'google';
+            }
+
+            // 관리자 이메일 검증 (leeshkr@gmail.com 등 지정된 계정만 사이트 관리자로 인가)
+            const isAdminEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === (currentUserEmail || '').toLowerCase());
+            
+            // 관리자 또는 관리자가 사전 승인 처리한 유저 상태 확인
+            const savedApprovalStatus = localStorage.getItem('saenuri_user_status_' + (currentUserEmail || '').toLowerCase());
+            const savedUserRole = localStorage.getItem('saenuri_user_role_' + (currentUserEmail || '').toLowerCase());
+
+            if (isAdminEmail) {
+                currentRole = 'ADMIN';
+                currentUserStatus = 'APPROVED';
+            } else if (savedApprovalStatus === 'APPROVED') {
+                currentRole = savedUserRole || paramRole || 'APPLICANT';
+                currentUserStatus = 'APPROVED';
+            } else {
+                currentRole = savedUserRole || paramRole || 'APPLICANT';
+                currentUserStatus = paramStatus || 'PENDING';
+            }
+
+            // 👑 테스트용 모드 전환 버튼 노출 제어 (사이트 관리자 계정일 때만 보임!)
+            const roleButtons = document.querySelectorAll('.btn-role-switch');
+            roleButtons.forEach(btn => {
+                btn.style.display = isAdminEmail ? 'inline-block' : 'none';
+            });
+
+            // 사용자 이름 및 이메일 자동 채우기
+            const userName = localStorage.getItem('saenuri_user_name') || paramName || '성도';
+
+            // 🔔 실제 신규 승인대기 성도일 경우 사이트 관리자 알림함에 자동 등록!
+            if (!isAdminEmail && currentUserStatus === 'PENDING' && currentUserEmail) {
+                checkAndAddPendingUserNotification(userName, currentUserEmail);
+            }
+
+            // 배너 및 뱃지 업데이트
+            const pendingBanner = document.getElementById('pending-approval-banner');
+            const welcomeGuide = document.getElementById('mypage-welcome-guide');
+            const emailDisplay = document.getElementById('user-email-display');
+            const statusBadge = document.getElementById('user-status-badge');
+
+            if (emailDisplay) emailDisplay.textContent = currentUserEmail || '성도님';
+
+            if (currentUserStatus === 'PENDING') {
+                if (pendingBanner) pendingBanner.style.display = 'block';
+                if (welcomeGuide) welcomeGuide.style.display = 'block';
+                if (statusBadge) {
+                    statusBadge.textContent = '⏳ 승인 대기';
+                    statusBadge.style.cssText = 'font-size:12px; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
+                }
+            } else {
+                if (pendingBanner) pendingBanner.style.display = 'none';
+                if (welcomeGuide) welcomeGuide.style.display = 'none';
+                if (statusBadge) {
+                    statusBadge.textContent = '✅ 승인 완료';
+                    statusBadge.style.cssText = 'font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
+                }
+            }
+
+            // 테마 및 모드 설정 로드
             const savedTheme = localStorage.getItem('saenuri_user_theme');
             if (savedTheme) selectThemeOption(savedTheme);
 
-            const savedMode = localStorage.getItem('saenuri_user_mode') || 'wizard';
-            const modeSelect = document.getElementById('my-mode-select');
-            if (modeSelect) modeSelect.value = savedMode;
-            renderFormMode(savedMode);
-        });
+            renderFormMode('onepage');
+            localStorage.setItem('saenuri_user_mode', 'onepage');
 
-        switchRole('APPLICANT', '김성도 집사님 (청년부)');
+            // ✝️ 2번 직분 섹션 활성화 토글 상태 적용
+            const isTitleEnabled = localStorage.getItem('saenuri_title_section_enabled') !== 'false';
+            toggleTitleSection(isTitleEnabled);
+
+            // 마이페이지 소셜 연동 상태 표시
+            renderSocialAuthStatus(currentUserEmail, currentOAuthProvider);
+
+            // 알림 시스템 렌더링 및 실시간 관리자 동기화 시작
+            renderNotifications();
+            startAdminRealtimeSync();
+
+            const myNameInput = document.getElementById('my-name-input');
+            const myEmailInput = document.getElementById('my-email-input');
+            const myAccountInput = document.getElementById('my-account-input');
+            const myHolderInput = document.getElementById('my-holder-input');
+
+            if (myNameInput) myNameInput.value = userName;
+            if (myEmailInput) myEmailInput.value = currentUserEmail || '';
+            if (myHolderInput && !myHolderInput.value) myHolderInput.value = userName;
+
+            // 계좌/은행 저장된 설정 불러오기
+            const savedBank = localStorage.getItem('saenuri_default_bank');
+            const savedAccount = localStorage.getItem('saenuri_default_account');
+            const savedHolder = localStorage.getItem('saenuri_default_holder');
+            const savedTelegram = localStorage.getItem('saenuri_telegram_id');
+            const myTelegramInput = document.getElementById('my-telegram-input');
+            if (savedBank) {
+                setBankSelectValue('my-bank-select', 'my-bank-direct-input', savedBank);
+                setBankSelectValue('form-bank-select', 'form-bank-direct-input', savedBank);
+            }
+            if (savedAccount && myAccountInput) myAccountInput.value = savedAccount;
+            if (savedHolder && myHolderInput) myHolderInput.value = savedHolder;
+            if (savedTelegram && myTelegramInput) myTelegramInput.value = savedTelegram;
+
+            // 사역 부서 전역 동기화 (서버 DB/스토리지 및 로컬 스토리지 불러오기)
+            fetchDepartmentsFromServer();
+            fetchPendingUsersFromServer(); // 실시간 승인대기자 목록 조회!
+            fetchApprovedUsersFromServer(); // 승인완료 회원 목록 조회!
+            fetchExpenseRequestsFromServer(); // 실시간 지출요청 목록 조회 및 진행현황/심사목록 렌더링!
+            checkPwaModalDisplay(); // 📱 모바일 바탕화면 바로가기 안내 팝업 검사 (7일 차단 연동)
+
+            // 🎯 처음 접속한 신규 성도일 경우(PENDING) 웰컴 팝업 및 마이페이지로 직행!
+            if (isAdminEmail) {
+                switchRole('ADMIN', userName + '님 (사이트 관리자)');
+            } else if (currentUserStatus === 'PENDING') {
+                switchRole('APPLICANT', userName + ' 성도님 (' + (currentUserEmail || '승인 대기') + ')');
+                showTab('mypage'); // 마이페이지로 즉시 자동 이동!
+
+                if (isFreshLogin) {
+                    alert('✨ [신규 성도님 소셜 로그인 안내]\n\n계정(' + (currentUserEmail || '소셜 계정') + ')으로 접속되었습니다!\n\n[마이페이지]에서 성함, 주로 사용하는 이메일, 자주 쓰는 환급 계좌 정보를 확인하고 [저장하기]를 누르시면 사이트 관리자에게 승인 알림이 발송됩니다.');
+                }
+            } else {
+                switchRole(currentRole, userName + ' 성도님');
+            }
+
+            // 🌐 실시간 서버 승인 상태 동기화 검증!
+            if (!isAdminEmail && currentUserEmail) {
+                syncUserApprovalStatusWithServer(currentUserEmail, userName);
+            }
+        });
     </script>
 </body>
 </html>

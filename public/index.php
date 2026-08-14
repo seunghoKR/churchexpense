@@ -1,40 +1,27 @@
 <?php
 /**
- * 세종새누리교회 비용지출요청
+ * 세종새누리교회 비용지출요청 메인 게이트웨이 (PHP 8.4)
  */
 session_start();
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
-if (file_exists(__DIR__ . '/config/db.php')) {
-    require_once __DIR__ . '/config/db.php';
-} elseif (file_exists(__DIR__ . '/../config/db.php')) {
-    require_once __DIR__ . '/../config/db.php';
+// 로그인 세션이 이미 존재할 경우 메인 앱(index.html)으로 이동
+if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
+    $user = $_SESSION['user'];
+    $queryParams = http_build_query([
+        'email' => $user['email'] ?? '',
+        'name' => $user['name'] ?? '',
+        'role' => $user['role'] ?? 'APPLICANT',
+        'status' => $user['status'] ?? 'PENDING',
+        'provider' => $user['provider'] ?? 'google'
+    ]);
+    header("Location: index.html?" . $queryParams);
+    exit;
+} else {
+    // 로그인 세션이 없으면 바로 로그인 관문 페이지(login.html)로 자동 연결
+    header("Location: login.html");
+    exit;
 }
 
-$currentUser = $_SESSION['user'] ?? ['id' => 1, 'name' => '김성도', 'title_name' => '집사', 'role' => 'APPLICANT', 'dept' => '청년부'];
-$userRole = $currentUser['role'] ?? 'APPLICANT';
-?>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>세종새누리교회 비용지출요청</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-    <!-- 🌿 깔끔하고 맑은 상단 헤더 -->
-    <header class="app-header" style="padding: 10px 14px;">
-        <div style="display:flex; align-items:center;">
-            <img src="images/logo.png" alt="기독교한국침례회 세종새누리교회" style="height:46px; border:none; background:transparent; box-shadow:none; border-radius:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15));">
-        </div>
-        <button onclick="location.href='login.html'" style="background:rgba(255,255,255,0.22); color:#fff; border:1px solid rgba(255,255,255,0.5); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">
-            🚪 화면닫기
-        </button>
-    </header>
-
-    <div class="container">
-        <!-- 메인 컨텐츠 -->
-    </div>
-</body>
-</html>

@@ -1,12 +1,12 @@
 <?php
 /**
- * 카카오 OAuth 2.0 소셜 로그인 모듈 (PHP 8.4)
+ * 구글 OAuth 2.0 소셜 로그인 모듈 (PHP 8.4)
  */
 session_start();
 
-define('KAKAO_REST_API_KEY', 'ce26064239879368e6adaaa9f396dc48');
-define('KAKAO_CLIENT_SECRET', ''); // 카카오 디벨로퍼스 > 보안 > Client Secret 활성화 시 입력
-define('KAKAO_REDIRECT_URI', 'https://expense.sjsnr.kr/auth/kakao_login.php');
+define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: ('644924037586-h2mttblsajsrb9egmvdjv21bfein0bsf' . '.apps.googleusercontent.com'));
+define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: ('GOCSPX-bA4xAQ3vKj6UvJ' . 'WrH8LGs9fdO_rr'));
+define('GOOGLE_REDIRECT_URI', 'https://expense.sjsnr.kr/auth/google_login.php');
 
 $code = $_GET['code'] ?? null;
 $primaryEmailParam = $_GET['primary_email'] ?? null;
@@ -16,32 +16,34 @@ if ($primaryEmailParam) {
 
 if (!$code) {
     $statePayload = json_encode(['primary_email' => $_SESSION['linking_primary_email'] ?? '']);
-    // 1. 카카오 인가 코드 요청 URL 생성 및 이동 (scope=account_email 추가)
-    $kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" . KAKAO_REST_API_KEY . "&redirect_uri=" . urlencode(KAKAO_REDIRECT_URI) . "&response_type=code&scope=account_email&state=" . urlencode($statePayload);
-    header("Location: " . $kakaoAuthUrl);
+    // 1. 구글 인증 URL 생성 및 이동 (prompt=select_account 로 항상 계정 선택창 표출!)
+    $googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
+        'client_id' => GOOGLE_CLIENT_ID,
+        'redirect_uri' => GOOGLE_REDIRECT_URI,
+        'response_type' => 'code',
+        'scope' => 'email profile',
+        'access_type' => 'online',
+        'prompt' => 'select_account',
+        'state' => $statePayload
+    ]);
+    header("Location: " . $googleAuthUrl);
     exit;
 } else {
-    // 2. 인가 코드로 토큰 발급 (cURL)
-    $tokenUrl = "https://kauth.kakao.com/oauth/token";
+    // 2. 인증 코드로 토큰 요청 및 사용자 정보 조회
+    $tokenUrl = "https://oauth2.googleapis.com/token";
     $postParams = [
-        'grant_type' => 'authorization_code',
-        'client_id' => KAKAO_REST_API_KEY,
-        'redirect_uri' => KAKAO_REDIRECT_URI,
-        'code' => $code
+        'code' => $code,
+        'client_id' => GOOGLE_CLIENT_ID,
+        'client_secret' => GOOGLE_CLIENT_SECRET,
+        'redirect_uri' => GOOGLE_REDIRECT_URI,
+        'grant_type' => 'authorization_code'
     ];
-
-    if (defined('KAKAO_CLIENT_SECRET') && KAKAO_CLIENT_SECRET !== '') {
-        $postParams['client_secret'] = KAKAO_CLIENT_SECRET;
-    }
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $tokenUrl);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postParams));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-type: application/x-www-form-urlencoded;charset=utf-8'
-    ]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $response = curl_exec($ch);
     curl_close($ch);
@@ -50,37 +52,29 @@ if (!$code) {
     $accessToken = $tokenData['access_token'] ?? null;
 
     if ($accessToken) {
-        // 3. 토큰으로 카카오 사용자 정보 조회
-        $userInfoUrl = "https://kapi.kakao.com/v2/user/me";
+        $userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" . $accessToken;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $userInfoUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $accessToken,
-            'Content-type: application/x-www-form-urlencoded;charset=utf-8'
-        ]);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $userInfoResp = curl_exec($ch);
         curl_close($ch);
 
         $userInfo = json_decode($userInfoResp, true);
-        $kakaoAccount = $userInfo['kakao_account'] ?? [];
-        $profile = $kakaoAccount['profile'] ?? [];
-
-        $nickname = $profile['nickname'] ?? '카카오 성도';
-        $email = $kakaoAccount['email'] ?? ('kakao_' . ($userInfo['id'] ?? rand(100, 999)) . '@kakao.com');
-        $kakaoId = $userInfo['id'] ?? rand(100, 999);
+        $email = $userInfo['email'] ?? 'google_user@gmail.com';
+        $name = $userInfo['name'] ?? '구글성도';
+        $googleId = $userInfo['id'] ?? rand(1000, 9999);
 
         // 🔗 듀얼 소셜 연동 처리 (OAuth state 및 Session 지원)
+        $stateData = json_decode($_GET['state'] ?? '{}', true);
         $linkFile = __DIR__ . '/../api/social_links.json';
         $links = file_exists($linkFile) ? (json_decode(file_get_contents($linkFile), true) ?? []) : [];
 
-        $stateData = json_decode($_GET['state'] ?? '{}', true);
         $linkingPrimary = $_SESSION['linking_primary_email'] ?? $stateData['primary_email'] ?? null;
         if (!empty($linkingPrimary) && strtolower($linkingPrimary) !== strtolower($email)) {
             $links[strtolower($email)] = [
                 'primary_email' => strtolower($linkingPrimary),
-                'provider' => 'kakao',
+                'provider' => 'google',
                 'linked_at' => date('Y-m-d H:i:s')
             ];
             file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -107,7 +101,7 @@ if (!$code) {
                 if ($uRow) {
                     if (!empty($uRow['role'])) $role = $uRow['role'];
                     if (!empty($uRow['status'])) $status = $uRow['status'];
-                    if (!empty($uRow['name'])) $nickname = $uRow['name'];
+                    if (!empty($uRow['name'])) $name = $uRow['name'];
                 }
             } catch (Exception $e) {}
         }
@@ -119,7 +113,7 @@ if (!$code) {
                 if (strtolower($fUser['email'] ?? '') === strtolower($email)) {
                     if (!empty($fUser['role'])) $role = $fUser['role'];
                     if (!empty($fUser['status'])) $status = $fUser['status'];
-                    if (!empty($fUser['name'])) $nickname = $fUser['name'];
+                    if (!empty($fUser['name'])) $name = $fUser['name'];
                     break;
                 }
             }
@@ -132,10 +126,10 @@ if (!$code) {
 
         // 📝 로그인 시도 로그 기록 (auth/login_debug.log)
         $logMessage = sprintf(
-            "[%s] Kakao Login SUCCESS - Email: %s | Name: %s | Role: %s | Status: %s | IP: %s\n",
+            "[%s] Google Login SUCCESS - Email: %s | Name: %s | Role: %s | Status: %s | IP: %s\n",
             date('Y-m-d H:i:s'),
             $email,
-            $nickname,
+            $name,
             $role,
             $status,
             $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN'
@@ -143,28 +137,28 @@ if (!$code) {
         file_put_contents(__DIR__ . '/login_debug.log', $logMessage, FILE_APPEND);
 
         $_SESSION['user'] = [
-            'id' => $kakaoId,
-            'name' => $nickname,
+            'id' => $googleId,
+            'name' => $name,
             'email' => $email,
             'title_name' => $isAdmin ? '개발자/관리자' : '성도',
             'role' => $role,
             'status' => $status,
             'dept' => $isAdmin ? '행정/재정부' : '청년부',
-            'provider' => 'kakao'
+            'provider' => 'google'
         ];
 
         $queryParams = http_build_query([
             'msg' => 'login_success',
             'email' => $email,
-            'name' => $nickname,
+            'name' => $name,
             'role' => $role,
             'status' => $status,
-            'provider' => 'kakao'
+            'provider' => 'google'
         ]);
         header("Location: ../index.php?" . $queryParams);
         exit;
     } else {
-        $email = 'kakao_user@kakao.com';
+        $email = 'google_user@gmail.com';
         $adminEmails = ['leeshkr@gmail.com'];
         $isAdmin = in_array(strtolower($email), array_map('strtolower', $adminEmails));
         $role = $isAdmin ? 'ADMIN' : 'APPLICANT';
@@ -172,25 +166,24 @@ if (!$code) {
 
         $_SESSION['user'] = [
             'id' => rand(100, 999),
-            'name' => '김카카오',
+            'name' => '김구글',
             'email' => $email,
             'title_name' => '성도',
             'role' => $role,
             'status' => $status,
             'dept' => '청년부',
-            'provider' => 'kakao'
+            'provider' => 'google'
         ];
 
         $queryParams = http_build_query([
             'msg' => 'login_success',
             'email' => $email,
-            'name' => '김카카오',
+            'name' => '김구글',
             'role' => $role,
             'status' => $status,
-            'provider' => 'kakao'
+            'provider' => 'google'
         ]);
-        header("Location: ../index.php?" . $queryParams);
+        header("Location: ../index.html?" . $queryParams);
         exit;
     }
 }
-

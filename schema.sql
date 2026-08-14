@@ -29,8 +29,9 @@ CREATE TABLE IF NOT EXISTS z_ch_saenuri_users (
     title_name VARCHAR(30) NOT NULL DEFAULT '성도',
     email VARCHAR(100),
     phone VARCHAR(20),
-    department VARCHAR(50) NOT NULL DEFAULT '청년부',
+    department VARCHAR(50) NOT NULL DEFAULT '행정/재정부',
     role VARCHAR(30) NOT NULL DEFAULT 'APPLICANT',
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     remember_token VARCHAR(100) NULL,
     preferred_mode VARCHAR(20) DEFAULT 'wizard',
     preferred_theme VARCHAR(20) DEFAULT 'green',
@@ -40,6 +41,11 @@ CREATE TABLE IF NOT EXISTS z_ch_saenuri_users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_oauth (oauth_provider, oauth_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 👑 초기 개발자 사이트 관리자 사전 등록
+INSERT INTO z_ch_saenuri_users (oauth_provider, oauth_id, name, title_name, email, department, role, status)
+VALUES ('google', 'dev_admin_leeshkr', '이승호 개발자', '개발자/관리자', 'leeshkr@gmail.com', '행정/재정부', 'ADMIN', 'APPROVED')
+ON DUPLICATE KEY UPDATE role='ADMIN', status='APPROVED';
 
 CREATE TABLE IF NOT EXISTS z_ch_saenuri_expense_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -42,6 +42,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+    min-width: 320px;
+    overflow-x: auto;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-primary);
@@ -130,10 +135,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 320px;
 }
 
 .container {
     max-width: 680px;
+    min-width: 320px;
     margin: 0 auto;
     padding: 12px;
 }
@@ -601,6 +608,93 @@ button.tab-btn.active,
 
 .chk-item-batch.active {
     display: block;
+}
+
+/* 📱 모바일 최적화 & 반응형 스마트 레이아웃 (한 글자 쪼개짐 완벽 방지!) */
+body {
+    word-break: keep-all;
+    word-wrap: break-word;
+}
+
+.tab-group {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.tab-btn {
+    flex: 1 0 auto;
+    white-space: nowrap;
+    word-break: keep-all;
+    padding: 9px 8px;
+    font-size: 13px;
+    letter-spacing: -0.3px;
+}
+
+.wizard-stepper {
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+.stepper-label {
+    white-space: nowrap;
+    word-break: keep-all;
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding: 8px 10px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .card {
+        padding: 14px 12px;
+        margin-bottom: 12px;
+    }
+
+    #user-toolbar-card {
+        padding: 10px 12px !important;
+    }
+
+    #user-toolbar-card > div {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    #role-switch-buttons {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    #role-switch-buttons button {
+        width: 100% !important;
+        text-align: center !alignment;
+        padding: 7px 4px !important;
+        font-size: 12.5px !important;
+    }
+
+    .wizard-stepper {
+        padding: 10px 8px;
+    }
+
+    .stepper-num {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .stepper-label {
+        font-size: 11px;
+    }
 }
 
 @keyframes fadeInDown {

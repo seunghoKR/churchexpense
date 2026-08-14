@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "email": "ktbmks@hanmail.net",
+        "name": "김태봉 목사님",
+        "department": "교육-청년",
+        "title_name": "목사",
+        "role": "TREASURER",
+        "status": "APPROVED",
+        "created_at": "2026-08-12 15:00"
+    },
+    {
+        "id": 2,
+        "email": "leeshkr@gmail.com",
+        "name": "이승호 개발자",
+        "department": "교육-청년",
+        "title_name": "집사",
+        "role": "ADMIN",
+        "status": "APPROVED",
+        "created_at": "2026-08-12 15:00"
+    },
+    {
+        "id": 3,
+        "email": "nuriohga@gmail.com",
+        "name": "누리오(NURIOH)",
+        "department": "교육-청소년",
+        "title_name": "성도",
+        "role": "APPLICANT",
+        "status": "APPROVED",
+        "created_at": "2026-08-12 16:00"
+    }
+]

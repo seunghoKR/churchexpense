@@ -5,8 +5,8 @@ import sys
 FTP_HOST = "115.68.168.215"
 FTP_USER = "nuriohga"
 FTP_PASS = "seungho0409#"
-LOCAL_DIR = r"y:\SynologyDrive\00.withAI\지출요청서"
-REMOTE_SUBDIR = "expense"
+LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
+REMOTE_SUBDIR = "/public_html/expense"
 
 print(f"Connecting to FTP {FTP_HOST}...")
 
@@ -15,56 +15,49 @@ try:
     ftp.login(FTP_USER, FTP_PASS)
     print("FTP Login Successful!")
 
-    print("FTP Directory List:")
-    ftp.retrlines('LIST')
+    def upload_dir(local_path, remote_path):
+        # 🔒 안전 검증: 반드시 /public_html/expense 하위 경로에만 업로드 허용!
+        if not remote_path.startswith("/public_html/expense"):
+            raise ValueError(f"CRITICAL SAFETY WARNING: Upload target '{remote_path}' is outside /public_html/expense!")
 
-    # 하위 디렉터리 expense 생성/이동
-    try:
-        ftp.cwd(REMOTE_SUBDIR)
-    except Exception:
-        print(f"Creating remote directory: {REMOTE_SUBDIR}")
-        ftp.mkd(REMOTE_SUBDIR)
-        ftp.cwd(REMOTE_SUBDIR)
+        try:
+            ftp.cwd(remote_path)
+        except Exception:
+            ftp.mkd(remote_path)
+            ftp.cwd(remote_path)
 
-    def upload_dir(local_path, remote_prefix=""):
+        print(f"FTP cwd: {ftp.pwd()}")
         for item in os.listdir(local_path):
-            # .git, vendor, node_modules 등 제외
-            if item in ['.git', 'node_modules', '.gemini', 'scratch']:
+            if item in ['.git', 'node_modules', '.gemini', 'scratch', '__pycache__']:
                 continue
             
             l_path = os.path.join(local_path, item)
             if os.path.isfile(l_path):
-                r_filename = item
                 with open(l_path, 'rb') as f:
-                    print(f"Uploading: {l_path} -> {r_filename}")
-                    ftp.storbinary(f'STOR {r_filename}', f)
+                    print(f"Uploading [{remote_path}]: {item}")
+                    ftp.storbinary(f'STOR {item}', f)
             elif os.path.isdir(l_path):
-                print(f"Creating & entering remote dir: {item}")
-                try:
-                    ftp.mkd(item)
-                except Exception:
-                    pass
-                ftp.cwd(item)
-                upload_dir(l_path, item)
-                ftp.cwd("..")
+                sub_remote = f"{remote_path}/{item}"
+                upload_dir(l_path, sub_remote)
 
-    # 소스 파일 업로드 진행
-    upload_dir(LOCAL_DIR)
+    # 1. /public_html/expense 전체 업로드
+    upload_dir(LOCAL_DIR, REMOTE_SUBDIR)
 
-    # public 폴더의 내용물을 expense 루트에도 올려서 접근 편의성 증대
+    # 2. public/ 내부 파일들을 /public_html/expense 루트에도 정확히 덮어쓰기!
     public_dir = os.path.join(LOCAL_DIR, 'public')
     if os.path.exists(public_dir):
-        print("Uploading public files to root of expense...")
+        ftp.cwd(REMOTE_SUBDIR)
+        print(f"OVERWRITING EXPENSE ROOT FILES: {ftp.pwd()}")
         for item in os.listdir(public_dir):
             l_path = os.path.join(public_dir, item)
             if os.path.isfile(l_path):
                 with open(l_path, 'rb') as f:
-                    print(f"Uploading public item: {item}")
+                    print(f"OVERWRITING ROOT FILE: {item}")
                     ftp.storbinary(f'STOR {item}', f)
 
     ftp.quit()
-    print("🎉 All files uploaded via FTP successfully!")
+    print("ALL FILES OVERWRITTEN AND DEPLOYED SUCCESSFULLY TO PUBLIC_HTML/EXPENSE!")
 
 except Exception as e:
-    print(f"❌ FTP Upload Error: {e}")
+    print(f"FTP Upload Error: {e}")
     sys.exit(1)

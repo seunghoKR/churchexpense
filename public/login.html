@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>세종새누리교회 비용지출요청 로그인</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260812_27">
 </head>
 <body style="background: linear-gradient(135deg, #f4f7f4 0%, #e8f5e9 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 14px;">
 
@@ -81,8 +81,15 @@
             if (isAuto) {
                 localStorage.setItem('saenuri_auto_login', 'true');
             }
-            location.href = 'index.html';
+            if (provider === 'kakao') {
+                location.href = 'auth/kakao_login.php';
+            } else if (provider === 'google') {
+                location.href = 'auth/google_login.php';
+            } else {
+                location.href = 'index.html';
+            }
         }
     </script>
 </body>
 </html>
+

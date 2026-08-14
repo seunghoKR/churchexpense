@@ -1,0 +1,22 @@
+{
+    "kakao_5035521659@kakao.com": {
+        "primary_email": "leesh@naver.com",
+        "provider": "kakao",
+        "linked_at": "2026-08-13 12:56:00"
+    },
+    "leeshkr@kakao.com": {
+        "primary_email": "leesh@naver.com",
+        "provider": "kakao",
+        "linked_at": "2026-08-14 10:12:00"
+    },
+    "nuriohga@gmail.com": {
+        "primary_email": "leesh@naver.com",
+        "provider": "google",
+        "linked_at": "2026-08-13 12:56:00"
+    },
+    "leesh@naver.com": {
+        "primary_email": "leesh@naver.com",
+        "provider": "primary",
+        "linked_at": "2026-08-13 12:56:00"
+    }
+}
