@@ -171,6 +171,9 @@ function handleUpdateMyPage(array $user) {
                 $fUser['name'] = $name;
                 $fUser['title_name'] = $titleName;
                 $fUser['department'] = $deptName;
+                $fUser['default_bank'] = $bank;
+                $fUser['default_account'] = $account;
+                $fUser['default_holder'] = $holder;
                 $fUser['role'] = $role;
                 if (!empty($telegramId)) $fUser['telegram_id'] = $telegramId;
                 $fUser['status'] = 'APPROVED';
@@ -189,6 +192,9 @@ function handleUpdateMyPage(array $user) {
             'name' => $name,
             'title_name' => $titleName,
             'department' => $deptName,
+            'default_bank' => $bank,
+            'default_account' => $account,
+            'default_holder' => $holder,
             'telegram_id' => $telegramId,
             'role' => $role,
             'status' => 'APPROVED',
@@ -212,14 +218,23 @@ function handleCreateRequest(array $user) {
     $pdo = getDbConnection();
     
     $applicantEmail = strtolower(trim($_POST['applicant_email'] ?? $_POST['email'] ?? $user['email'] ?? ''));
-    $applicantName = trim($_POST['applicant_name'] ?? $_POST['name'] ?? $user['name'] ?? '성도');
+    $accountHolder = trim($_POST['account_holder'] ?? '');
+    $applicantName = trim($_POST['applicant_name'] ?? $_POST['name'] ?? $user['name'] ?? '');
+    if (empty($applicantName) || $applicantName === '성도') {
+        if (!empty($accountHolder)) {
+            $applicantName = $accountHolder;
+        } elseif (!empty($user['name'])) {
+            $applicantName = $user['name'];
+        } else {
+            $applicantName = '성도';
+        }
+    }
     $department = trim($_POST['department'] ?? '청년부');
     $expenseDate = $_POST['expense_date'] ?? date('Y-m-d');
     $category = $_POST['category'] ?? '일반지출';
     $purpose = trim($_POST['purpose'] ?? '비용 지출');
     $bankName = trim($_POST['bank_name'] ?? '');
     $accountNumber = trim($_POST['account_number'] ?? '');
-    $accountHolder = trim($_POST['account_holder'] ?? '');
     $signatureData = $_POST['signature_data'] ?? '';
     $totalAmount = (float)($_POST['total_amount'] ?? 0);
     $requestDate = date('Y-m-d');
@@ -292,6 +307,57 @@ function handleCreateRequest(array $user) {
         }
     }
 
+    // 🖼️ 영수증 / 증빙 사진 파일 및 Base64 이미지 처리
+    $receiptUrls = [];
+    $uploadDir = __DIR__ . '/../uploads/receipts/';
+    $publicUploadDir = __DIR__ . '/../public/uploads/receipts/';
+    if (!file_exists($uploadDir)) @mkdir($uploadDir, 0777, true);
+    if (!file_exists($publicUploadDir)) @mkdir($publicUploadDir, 0777, true);
+
+    // 1. multipart/form-data 파일 업로드 처리
+    if (!empty($_FILES['receipt_files']['name'])) {
+        $names = (array)$_FILES['receipt_files']['name'];
+        $tmpNames = (array)$_FILES['receipt_files']['tmp_name'];
+        foreach ($names as $idx => $fName) {
+            if (!empty($tmpNames[$idx]) && is_uploaded_file($tmpNames[$idx])) {
+                $ext = strtolower(pathinfo($fName, PATHINFO_EXTENSION));
+                if (empty($ext) || !in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) $ext = 'jpg';
+                $saveName = 'rcpt_' . $docNo . '_' . ($idx + 1) . '_' . time() . '.' . $ext;
+                $targetFile1 = $uploadDir . $saveName;
+                $targetFile2 = $publicUploadDir . $saveName;
+                if (move_uploaded_file($tmpNames[$idx], $targetFile1)) {
+                    @copy($targetFile1, $targetFile2);
+                    $receiptUrls[] = 'uploads/receipts/' . $saveName;
+                }
+            }
+        }
+    }
+
+    // 2. Base64 data URL 처리 (스마트폰 바로 촬영 / 이미지 첨부 fallback)
+    $rawReceiptImages = $_POST['receipt_images'] ?? '';
+    if (empty($receiptUrls) && !empty($rawReceiptImages)) {
+        $dataUrls = is_array($rawReceiptImages) ? $rawReceiptImages : (json_decode($rawReceiptImages, true) ?? []);
+        foreach ($dataUrls as $idx => $dUrl) {
+            if (strpos($dUrl, 'data:image/') === 0) {
+                $parts = explode(',', $dUrl);
+                if (count($parts) === 2) {
+                    $imgData = base64_decode($parts[1]);
+                    if ($imgData !== false) {
+                        $saveName = 'rcpt_' . $docNo . '_' . ($idx + 1) . '_' . time() . '.png';
+                        $targetFile1 = $uploadDir . $saveName;
+                        $targetFile2 = $publicUploadDir . $saveName;
+                        if (file_put_contents($targetFile1, $imgData)) {
+                            @file_put_contents($targetFile2, $imgData);
+                            $receiptUrls[] = 'uploads/receipts/' . $saveName;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    $receiptUrl = !empty($receiptUrls) ? $receiptUrls[0] : '';
+
     // JSON 백업 파일 저장
     $newRecord = [
         'id' => $requestId,
@@ -308,12 +374,17 @@ function handleCreateRequest(array $user) {
         'account_number' => $accountNumber,
         'account_holder' => $accountHolder,
         'signature_data' => $signatureData,
+        'receipt_url' => $receiptUrl,
+        'receipt_urls' => $receiptUrls,
         'status' => 'PENDING',
         'items' => $items,
         'created_at' => date('Y-m-d H:i:s')
     ];
     array_unshift($fileData, $newRecord);
     file_put_contents($logFile, json_encode($fileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    // 💬 카카오톡 알림 발송 (신규 지출요청 등록)
+    notifyExpenseEvent('NEW_REQUEST', $newRecord);
 
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_POST['ajax'])) {
         echo json_encode([
@@ -339,6 +410,13 @@ function handleGetExpenseRequests() {
         $requests = json_decode(file_get_contents($logFile), true) ?? [];
     }
 
+    $jsonMap = [];
+    foreach ($requests as $jReq) {
+        if (!empty($jReq['doc_no'])) {
+            $jsonMap[$jReq['doc_no']] = $jReq;
+        }
+    }
+
     if ($pdo) {
         try {
             $stmt = $pdo->query("
@@ -354,6 +432,10 @@ function handleGetExpenseRequests() {
                     $iStmt = $pdo->prepare("SELECT item_name as name, amount, note FROM z_ch_saenuri_expense_items WHERE request_id = ? ORDER BY item_order ASC");
                     $iStmt->execute([$row['id']]);
                     $items = $iStmt->fetchAll();
+
+                    $jMatch = $jsonMap[$row['doc_no']] ?? null;
+                    $rUrl = $row['receipt_url'] ?? ($jMatch['receipt_url'] ?? '');
+                    $rUrls = !empty($jMatch['receipt_urls']) ? $jMatch['receipt_urls'] : (!empty($rUrl) ? [$rUrl] : []);
 
                     $dbRequests[] = [
                         'id' => $row['id'],
@@ -371,6 +453,8 @@ function handleGetExpenseRequests() {
                         'account_holder' => $row['account_holder'],
                         'status' => $row['status'],
                         'reject_reason' => $row['reject_reason'] ?? '',
+                        'receipt_url' => $rUrl,
+                        'receipt_urls' => $rUrls,
                         'items' => $items,
                         'created_at' => $row['created_at'] ?? $row['request_date']
                     ];
@@ -704,11 +788,14 @@ function handleCheckUserStatus() {
     $name = '';
     $titleName = '';
     $dept = '';
+    $bank = '';
+    $account = '';
+    $holder = '';
 
     $pdo = getDbConnection();
     if ($pdo) {
         try {
-            $stmt = $pdo->prepare("SELECT name, title_name, department, status, role FROM z_ch_saenuri_users WHERE LOWER(email) = ?");
+            $stmt = $pdo->prepare("SELECT name, title_name, department, default_bank, default_account, default_holder, status, role FROM z_ch_saenuri_users WHERE LOWER(email) = ?");
             $stmt->execute([$email]);
             $u = $stmt->fetch();
             if ($u) {
@@ -717,6 +804,9 @@ function handleCheckUserStatus() {
                 if (!empty($u['name'])) $name = $u['name'];
                 if (!empty($u['title_name'])) $titleName = $u['title_name'];
                 if (!empty($u['department'])) $dept = $u['department'];
+                if (!empty($u['default_bank'])) $bank = $u['default_bank'];
+                if (!empty($u['default_account'])) $account = $u['default_account'];
+                if (!empty($u['default_holder'])) $holder = $u['default_holder'];
             }
         } catch (Exception $e) {}
     }
@@ -732,6 +822,9 @@ function handleCheckUserStatus() {
                 if (empty($name) && !empty($fUser['name'])) $name = $fUser['name'];
                 if (empty($titleName) && !empty($fUser['title_name'])) $titleName = $fUser['title_name'];
                 if (empty($dept) && !empty($fUser['department'])) $dept = $fUser['department'];
+                if (empty($bank) && !empty($fUser['default_bank'])) $bank = $fUser['default_bank'];
+                if (empty($account) && !empty($fUser['default_account'])) $account = $fUser['default_account'];
+                if (empty($holder) && !empty($fUser['default_holder'])) $holder = $fUser['default_holder'];
                 break;
             }
         }
@@ -743,7 +836,10 @@ function handleCheckUserStatus() {
         'role' => $role,
         'name' => $name,
         'title_name' => $titleName,
-        'department' => $dept
+        'department' => $dept,
+        'default_bank' => $bank,
+        'default_account' => $account,
+        'default_holder' => $holder
     ]);
     exit;
 }
@@ -1078,5 +1174,83 @@ function handleGetSocialLinks() {
         'linked_emails' => $linkedEmails
     ]);
     exit;
+}
+
+// 🔔 이벤트 발생 시 관리자 및 요청자 카카오톡 알림 발송 래퍼
+function notifyExpenseEvent($type, $data) {
+    // DB 및 pending_users.json에서 모든 재정부/관리자 이메일 동적 추출
+    $adminEmails = ['leeshkr@gmail.com', 'ktbmks@hanmail.net', 'leesh@naver.com'];
+    $pendingFile = __DIR__ . '/pending_users.json';
+    if (file_exists($pendingFile)) {
+        $pUsers = json_decode(file_get_contents($pendingFile), true) ?? [];
+        foreach ($pUsers as $pu) {
+            if (in_array($pu['role'] ?? '', ['ADMIN', 'TREASURER']) && !empty($pu['email'])) {
+                $adminEmails[] = strtolower($pu['email']);
+            }
+        }
+    }
+    $adminEmails = array_values(array_unique(array_filter($adminEmails)));
+
+    if ($type === 'NEW_REQUEST') {
+        $title = "📌 [신규 지출요청 등록 알림]";
+        $desc = "문서번호: " . ($data['doc_no'] ?? '-') . "\n"
+              . "요청자: " . ($data['applicant_name'] ?? '성도') . "\n"
+              . "요청부서: " . ($data['department'] ?? '부서') . "\n"
+              . "총 금액: " . number_format($data['total_amount'] ?? 0) . "원\n"
+              . "지출목적: " . ($data['purpose'] ?? '-');
+
+        // 관리자/재정부 카카오톡 발송 (등록된 이메일 및 저장된 모든 재정부 카카오 토큰 대상)
+        $tokenFile = __DIR__ . '/kakao_tokens.json';
+        $tokens = file_exists($tokenFile) ? (json_decode(file_get_contents($tokenFile), true) ?? []) : [];
+
+        $sentTargets = [];
+        foreach ($adminEmails as $aEmail) {
+            sendKakaoNotification($aEmail, $title, $desc);
+            $sentTargets[] = strtolower($aEmail);
+        }
+
+        foreach (array_keys($tokens) as $tKey) {
+            if (strpos($tKey, 'kakao_') === 0 && !in_array($tKey, $sentTargets)) {
+                sendKakaoNotification($tKey, $title, $desc);
+                $sentTargets[] = $tKey;
+            }
+        }
+
+        // 요청자 본인에게 카카오톡 접수 확인 메시지 전송
+        if (!empty($data['applicant_email'])) {
+            sendKakaoNotification($data['applicant_email'], "✅ [지출요청서 정상 제출 안내]", "성도님의 지출요청서(" . ($data['doc_no'] ?? '') . ")가 접수되었습니다.\n담당 재정부 확인 후 결재가 진행됩니다.");
+        }
+    } elseif ($type === 'STATUS_UPDATE') {
+        $st = $data['status'] ?? '';
+        $docNo = $data['doc_no'] ?? '-';
+        $applicantName = $data['applicant_name'] ?? '성도';
+
+        if ($st === 'APPROVED') {
+            $title = "👍 [지출요청 결재 승인 완료]";
+            $desc = "성도님의 지출요청서 결재가 정상 승인되었습니다!\n\n"
+                  . "• 문서번호: " . $docNo . "\n"
+                  . "• 요청자: " . $applicantName . "\n"
+                  . "• 진행상태: 👍 승인 완료 (재정부 입금 집행 대기 중)";
+        } elseif ($st === 'PAID') {
+            $title = "💰 [지출금 계좌 입금 완료!]";
+            $desc = "성도님의 등록 계좌로 지출금 입금이 최종 완료되었습니다!\n\n"
+                  . "• 문서번호: " . $docNo . "\n"
+                  . "• 요청자: " . $applicantName . "\n"
+                  . "• 진행상태: 💰 최종 지급/입금 완료";
+        } elseif ($st === 'REJECTED') {
+            $title = "❌ [지출요청 반려 안내]";
+            $desc = "성도님의 지출요청서 결재가 반려되었습니다.\n\n"
+                  . "• 문서번호: " . $docNo . "\n"
+                  . "• 반려 사유: " . ($data['reject_reason'] ?? '사유 미기재') . "\n"
+                  . "• 요청자: " . $applicantName;
+        } else {
+            $title = "🔔 [지출요청 상태 변경 안내]";
+            $desc = "• 문서번호: " . $docNo . "\n• 진행상태: " . $st;
+        }
+
+        if (!empty($data['applicant_email'])) {
+            sendKakaoNotification($data['applicant_email'], $title, $desc);
+        }
+    }
 }
 

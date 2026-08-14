@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>세종새누리교회 비용지출요청</title>
-    <link rel="stylesheet" href="css/style.css?v=20260812_99">
+    <link rel="stylesheet" href="css/style.css?v=20260814_200">
 </head>
 <body>
 
@@ -46,12 +46,12 @@
                 <div style="word-break:keep-all; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     <strong>👤 현재 접속:</strong> 
                     <span id="user-name-display" style="color:#047857; font-weight:700;">김성도 집사님</span>
-                    <span id="user-role-badge" style="font-size:13px; color:#6b7280; font-weight:bold;">(신청자)</span>
+                    <span id="user-role-badge" style="font-size:13px; color:#6b7280; font-weight:bold;">(요청자)</span>
                     <span id="user-status-badge" style="font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;">승인 완료</span>
                 </div>
                 <div id="role-switch-buttons" style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
-                    <span id="admin-test-mode-buttons" style="display:none; gap:4px; align-items:center; flex-wrap:wrap;">
-                        <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[신청자 모드]</button>
+                    <span id="admin-test-mode-buttons" style="display:inline-flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                        <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[요청자 모드]</button>
                         <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[재정부 모드]</button>
                         <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[👑 관리자 모드]</button>
                     </span>
@@ -147,7 +147,7 @@
                         </button>
 
                         <div class="total-banner">
-                            총 신청금액: <span id="w-total-amount-display">0 원</span>
+                            총 요청금액: <span id="w-total-amount-display">0 원</span>
                         </div>
 
                         <div class="wizard-btn-group wizard-only-btn">
@@ -352,17 +352,6 @@
         <!-- 4. 📋 재정부 전용 지출요청 심사 & 스마트 2대 버튼 목록 -->
         <div id="section-admin" style="display:none;">
 
-            <!-- 🔔 재정부 전용 실시간 지출요청 알림함 카드 -->
-            <div class="card" style="border-top:3.5px solid #059669; background:#f0fdf4; border-color:#bbf7d0; margin-bottom:14px;">
-                <div class="card-title" style="color:#047857; justify-content:space-between;">
-                    <span>🔔 재정부 전용 실시간 지출요청 알림함</span>
-                    <span id="treasurer-notif-count" style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:10px; font-weight:bold;">0 건</span>
-                </div>
-                <div id="treasurer-notif-list" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
-                    <div style="font-size:13px; color:#64748b; padding:6px; text-align:center;">도착한 신규 알림이 없습니다.</div>
-                </div>
-            </div>
-
             <div class="card">
                 <!-- 🔘 상단 2대 핵심 버튼 -->
                 <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
@@ -550,9 +539,10 @@
             <div style="font-size:13.5px; line-height:1.6; margin-bottom:14px;">
                 <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
                     <div><strong>요청 건명:</strong> <span id="m-purpose-text" style="font-weight:bold; color:var(--primary-color);">청년부 여름 수련회 물품 구매</span></div>
-                    <div><strong>신청 정보:</strong> <span id="m-dept-text">청년부</span> - <span id="m-applicant-text">김성도 님</span></div>
+                    <div><strong>요청자 (성명):</strong> <span id="m-applicant-text" style="font-weight:800; font-size:15px; color:#0f172a;">김성도 님</span></div>
+                    <div><strong>요청 부서:</strong> <span id="m-dept-text" style="font-weight:bold; color:#334155;">청년부</span></div>
                     <div><strong>환급 계좌:</strong> <span id="m-account-text">농협 351-1234-5678-00 (예금주: 김성도)</span></div>
-                    <div><strong>신청 총액:</strong> <span id="m-amount-text" style="font-size:16px; font-weight:800; color:#2563eb;">85,000 원</span></div>
+                    <div><strong>요청 총액:</strong> <span id="m-amount-text" style="font-size:16px; font-weight:800; color:#2563eb;">85,000 원</span></div>
                     <div><strong>현재 상태:</strong> <span id="m-status-text" class="status-badge">집행 완료</span></div>
                 </div>
 
@@ -568,7 +558,7 @@
 
                 <div style="font-weight:700; color:#334155; margin-bottom:6px;">🖼️ 영수증 / 증빙 사진 미리보기:</div>
                 <div id="m-receipt-gallery" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
-                    <img src="images/logo.png" alt="영수증 썸네일" class="modal-receipt-thumb" onclick="alert('📸 영수증 원본 사진을 확대하여 미리봅니다.')" title="터치 시 원본 사진 확대 보기">
+                    <img src="images/logo.png" alt="영수증 썸네일" class="modal-receipt-thumb" onclick="openImageZoomModal(this.src)" title="터치 시 원본 사진 확대 보기" style="cursor:zoom-in; width:90px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;">
                 </div>
 
                 <div class="form-group" style="margin-bottom:14px;" id="m-memo-group">
@@ -596,33 +586,12 @@
         </div>
     </div>
 
-    <!-- ✈️ 텔레그램 Chat ID 확인 안내 모달 -->
-    <div id="telegram-guide-modal" class="modal-backdrop">
-        <div class="modal-content" style="max-width:500px;">
-            <div class="modal-header" style="border-bottom:1.5px solid #e0f2fe; padding-bottom:10px;">
-                <h3 style="font-size:16.5px; font-weight:800; color:#0088cc;">✈️ 텔레그램 Chat ID 확인 안내</h3>
-                <button type="button" class="modal-close-btn" onclick="closeTelegramGuideModal()">✕</button>
-            </div>
-            <div style="font-size:13.5px; line-height:1.6; color:#334155; margin-top:12px; text-align:left;">
-                <p style="margin-bottom:10px;">
-                    텔레그램 봇 실시간 무료 알림을 수신하려면 내 계정의 <strong>Chat ID (숫자 번호)</strong>가 필요합니다. 1분 만에 확인하는 방법입니다!
-                </p>
-                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">1단계: 텔레그램 앱 실행 후 봇 검색</div>
-                    <div>텔레그램 검색창에 <strong style="color:#0088cc;">@userinfobot</strong> 또는 <strong style="color:#0088cc;">@raw_data_bot</strong> 을 검색하고 대화를 시작합니다.</div>
-                </div>
-                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">2단계: /start 메시지 전송</div>
-                    <div>대화창에 <strong style="color:#0088cc;">/start</strong> 메시지를 보내면, 봇이 <strong>Id: 123456789</strong> 형태의 숫자를 즉시 답장해 줍니다.</div>
-                </div>
-                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:14px;">
-                    <div style="font-weight:bold; color:#0369a1; margin-bottom:4px;">3단계: 번호 복사 및 마이페이지 저장</div>
-                    <div>응답받은 숫자 번호(예: <strong style="color:#0088cc;">123456789</strong>)를 복사하여 마이페이지 [텔레그램 Chat ID] 란에 입력 후 [저장]을 누르시면 준비 끝!</div>
-                </div>
-            </div>
-            <button type="button" class="btn-primary-lg" style="background:#0088cc; font-size:14px; padding:11px;" onclick="closeTelegramGuideModal()">
-                👌 확인 완료
-            </button>
+    <!-- 📸 영수증 원본 사진 확대 미리보기 모달 -->
+    <div id="receipt-image-zoom-modal" class="modal-backdrop" onclick="closeImageZoomModal()" style="z-index:99999; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:center;">
+        <div style="position:relative; max-width:92vw; max-height:92vh; display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
+            <button type="button" onclick="closeImageZoomModal()" style="position:absolute; top:-14px; right:-14px; background:#ef4444; color:#fff; border:none; width:32px; height:32px; border-radius:50%; font-size:18px; font-weight:bold; cursor:pointer; z-index:100000; display:flex; justify-content:center; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.4);">✕</button>
+            <img id="zoom-receipt-image" src="" alt="영수증 원본 사진" style="max-width:92vw; max-height:85vh; object-fit:contain; border-radius:8px; border:2px solid #ffffff; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <div style="color:#ffffff; font-size:13px; margin-top:8px; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8);">📸 터치(클릭)하면 닫힙니다</div>
         </div>
     </div>
 
@@ -940,6 +909,32 @@
                 }
             }
 
+            const receiptGallery = document.getElementById('m-receipt-gallery');
+            if (receiptGallery) {
+                let rUrls = [];
+                if (req.receipt_urls && Array.isArray(req.receipt_urls) && req.receipt_urls.length > 0) {
+                    rUrls = req.receipt_urls;
+                } else if (req.receipt_url) {
+                    rUrls = [req.receipt_url];
+                } else if (req.receipt_image) {
+                    rUrls = [req.receipt_image];
+                } else if (req.receipts && Array.isArray(req.receipts) && req.receipts.length > 0) {
+                    rUrls = req.receipts;
+                }
+
+                if (rUrls.length > 0) {
+                    receiptGallery.innerHTML = rUrls.map(url => `
+                        <img src="${url}" alt="영수증 원본 사진" class="modal-receipt-thumb" onclick="openImageZoomModal(this.src)" title="터치 시 원본 사진 확대 보기" style="cursor:zoom-in; width:90px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    `).join('');
+                } else {
+                    receiptGallery.innerHTML = `
+                        <div style="font-size:12.5px; color:#64748b; padding:10px 14px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1; display:flex; align-items:center; gap:6px;">
+                            🖼️ <span>첨부된 영수증 증빙 사진이 없습니다.</span>
+                        </div>
+                    `;
+                }
+            }
+
             const stBadge = document.getElementById('m-status-text');
             if (stBadge) {
                 stBadge.textContent = getStatusLabel(req.status);
@@ -966,6 +961,22 @@
             }
 
             document.getElementById('detail-review-modal').classList.add('active');
+        }
+
+        function openImageZoomModal(imgSrc) {
+            const zoomModal = document.getElementById('receipt-image-zoom-modal');
+            const zoomImg = document.getElementById('zoom-receipt-image');
+            if (zoomModal && zoomImg) {
+                zoomImg.src = imgSrc;
+                zoomModal.style.display = 'flex';
+            }
+        }
+
+        function closeImageZoomModal() {
+            const zoomModal = document.getElementById('receipt-image-zoom-modal');
+            if (zoomModal) {
+                zoomModal.style.display = 'none';
+            }
         }
 
         function openDetailModal(reqId, purpose, totalAmount, dept, applicant, status, accountInfo) {
@@ -1062,21 +1073,34 @@
             });
 
             if (confirm('💸 선택하신 총 ' + items.length + '건 (총 ' + totalSum.toLocaleString() + '원)의 요청서를 [일괄 집행 완료] 처리하시겠습니까?')) {
-                reqIds.forEach(id => {
-                    const badge = document.getElementById('badge-' + id);
-                    if (badge) {
-                        badge.className = 'status-badge status-PAID';
-                        badge.style.cssText = 'background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;';
-                        badge.textContent = '✅ 집행 완료';
-                    }
+                const promises = reqIds.map(docNo => {
+                    const formData = new FormData();
+                    formData.append('action', 'update_status');
+                    formData.append('doc_no', docNo);
+                    formData.append('status', 'PAID');
+                    return fetch('../api/request_action.php', { method: 'POST', body: formData })
+                        .then(res => res.json())
+                        .catch(err => null);
                 });
 
-                alert('🎉 [일괄 집행 완료 처리 완료!]\n\n' +
-                      '• 선택 건수: 총 ' + items.length + '건\n' +
-                      '• 집행 총액: ' + totalSum.toLocaleString() + ' 원\n\n' +
-                      '인터넷 뱅킹 환급 집행이 정상 완료되었습니다!');
+                Promise.all(promises).then(() => {
+                    reqIds.forEach(id => {
+                        const badge = document.getElementById('badge-' + id);
+                        if (badge) {
+                            badge.className = 'status-badge status-PAID';
+                            badge.style.cssText = 'background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;';
+                            badge.textContent = '✅ 집행 완료';
+                        }
+                    });
 
-                toggleBatchMode(false);
+                    alert('🎉 [일괄 집행 완료 처리 완료!]\n\n' +
+                          '• 선택 건수: 총 ' + items.length + '건\n' +
+                          '• 집행 총액: ' + totalSum.toLocaleString() + ' 원\n\n' +
+                          '인터넷 뱅킹 환급 집행 및 요청자 카카오톡 알림이 정상 발송되었습니다!');
+
+                    toggleBatchMode(false);
+                    fetchRequestsFromServer();
+                });
             }
         }
 
@@ -1724,14 +1748,15 @@
                     : '세부 항목 없음';
 
                 return `
-                    <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 12px; background:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 12px; background:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor:pointer;" onclick="openDetailModalByDocNo('${r.doc_no || r.id}')">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <span style="font-weight:800; font-size:14.5px; color:var(--primary-color);">${r.doc_no || r.id}</span>
                             ${statusBadgeHtml}
                         </div>
                         <h3 style="font-size:16px; font-weight:800; margin-bottom:6px; color:#0f172a;">${r.purpose || '비용 지출'}</h3>
                         <div style="font-size:13.5px; color:#475569; margin-bottom:8px; line-height:1.5;">
-                            신청자: <strong>${r.applicant_name || '성도'}</strong> | 부서: <strong>${r.department || '청년부'}</strong> | 신청금액: <strong style="color:#1d4ed8; font-size:15px;">${Number(r.total_amount || 0).toLocaleString()} 원</strong> | 요청일: ${r.request_date || r.expense_date || '2026-08-13'}
+                            요청자: <strong>${r.applicant_name || '성도'}</strong> | 부서: <strong>${r.department || '청년부'}</strong> | 요청금액: <strong style="color:#1d4ed8; font-size:15px;">${Number(r.total_amount || 0).toLocaleString()} 원</strong>
+                            <br><span style="font-size:12px; color:#64748b;">⏱️ 요청시각: ${r.created_at || r.request_date || ''}</span>
                         </div>
                         <div style="background:#f8fafc; border-radius:6px; padding:8px 12px; font-size:12.5px; color:#334155; border:1px solid #e2e8f0;">
                             <strong>세부 항목 내역:</strong><br>${itemsSummary}
@@ -1748,25 +1773,10 @@
             const notifCount = document.getElementById('treasurer-notif-count');
             if (!container) return;
 
+            currentAllExpenseRequests = allRequests;
+
             const pendingList = allRequests.filter(r => r.status === 'PENDING');
             if (notifCount) notifCount.textContent = pendingList.length + ' 건';
-
-            if (notifList) {
-                if (pendingList.length === 0) {
-                    notifList.innerHTML = '<div style="font-size:13px; color:#64748b; padding:8px; text-align:center;">도착한 신규 심사 요청 알림이 없습니다.</div>';
-                } else {
-                    notifList.innerHTML = pendingList.map(r => `
-                        <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="font-size:13px; color:#065f46; font-weight:600;">
-                                💸 [신규 지출요청] <strong>${r.applicant_name}</strong> (${r.department}) - ${r.purpose} (${Number(r.total_amount).toLocaleString()}원)
-                            </div>
-                            <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'APPROVED')" style="background:#059669; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; flex-shrink:0;">
-                                👍 승인
-                            </button>
-                        </div>
-                    `).join('');
-                }
-            }
 
             if (allRequests.length === 0) {
                 container.innerHTML = '<div style="font-size:13.5px; color:#64748b; padding:16px; text-align:center;">접수된 지출요청 내역이 없습니다.</div>';
@@ -1777,22 +1787,18 @@
                 const statusBadgeHtml = getStatusBadgeHtml(r.status);
                 return `
                     <div class="request-summary-card" style="margin-bottom:10px; display:flex; gap:10px; align-items:flex-start; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:12px;">
-                        <input type="checkbox" class="chk-item-batch" value="${r.doc_no}" data-amount="${r.total_amount}" data-status="${r.status}" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
-                        <div style="flex:1; cursor:pointer;" onclick="openDetailModal('${r.doc_no}', '${r.purpose}', '${Number(r.total_amount).toLocaleString()} 원', '${r.department}', '${r.applicant_name}', '${r.status}', '${r.bank_name} ${r.account_number} (${r.account_holder})')">
+                        <input type="checkbox" class="chk-item-batch ${isBatchModeActive ? 'active' : ''}" value="${r.doc_no}" data-amount="${r.total_amount}" data-status="${r.status}" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
+                        <div style="flex:1; cursor:pointer;" onclick="openDetailModalByDocNo('${r.doc_no}')">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:800; color:var(--primary-color); font-size:15px;">${r.doc_no}</span>
                                 ${statusBadgeHtml}
                             </div>
                             <div style="font-weight:bold; font-size:15.5px; margin-top:4px; color:#0f172a;">${r.purpose}</div>
-                            <div style="font-size:13px; color:#64748b; margin-top:2px;">신청자: ${r.applicant_name} | 금액: ${Number(r.total_amount).toLocaleString()} 원 | 계좌: ${r.bank_name} ${r.account_number} (${r.account_holder})</div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:4px; align-self:center;">
-                            ${r.status === 'PENDING' ? `
-                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'APPROVED')" style="background:#059669; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">승인</button>
-                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'REJECTED')" style="background:#ef4444; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">반려</button>
-                            ` : r.status === 'APPROVED' ? `
-                                <button type="button" onclick="updateRequestStatusApi('${r.doc_no}', 'PAID')" style="background:#2563eb; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">집행완료</button>
-                            ` : ''}
+                            <div style="font-size:13px; color:#64748b; margin-top:2px;">
+                                요청자: <strong>${r.applicant_name}</strong> | 부서: <strong>${r.department}</strong> | 요청금액: <strong style="color:#1d4ed8;">${Number(r.total_amount).toLocaleString()} 원</strong>
+                                <br>계좌: ${r.bank_name} ${r.account_number} (예금주: ${r.account_holder})
+                                <br><span style="font-size:12px; color:#64748b;">⏱️ 요청시각: ${r.created_at || r.request_date || ''}</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1823,13 +1829,13 @@
         function getStatusBadgeHtml(status) {
             switch (status) {
                 case 'PAID':
-                    return '<span class="status-badge status-PAID" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">✅ 집행 완료</span>';
+                    return '<span class="status-badge status-PAID" id="badge-PAID" style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;">✅ 집행 완료</span>';
                 case 'APPROVED':
-                    return '<span class="status-badge status-APPROVED" style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">👍 승인 완료</span>';
+                    return '<span class="status-badge status-APPROVED" id="badge-APPROVED" style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;">👍 승인 완료</span>';
                 case 'REJECTED':
-                    return '<span class="status-badge status-REJECTED" style="background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">❌ 반려</span>';
+                    return '<span class="status-badge status-REJECTED" id="badge-REJECTED" style="background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;">❌ 반려</span>';
                 default:
-                    return '<span class="status-badge status-PENDING" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">⏳ 심사 대기</span>';
+                    return '<span class="status-badge status-PENDING" id="badge-PENDING" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;">⏳ 심사 대기</span>';
             }
         }
 
