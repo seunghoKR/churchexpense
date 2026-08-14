@@ -16,8 +16,8 @@ if ($primaryEmailParam) {
 
 if (!$code) {
     $statePayload = json_encode(['primary_email' => $_SESSION['linking_primary_email'] ?? '']);
-    // 1. 카카오 인가 코드 요청 URL 생성 및 이동 (scope=account_email 추가)
-    $kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" . KAKAO_REST_API_KEY . "&redirect_uri=" . urlencode(KAKAO_REDIRECT_URI) . "&response_type=code&scope=account_email&state=" . urlencode($statePayload);
+    // 1. 카카오 인가 코드 요청 URL 생성 및 이동 (KOE205 에러 방지를 위해 기본 인증 URL로 사용)
+    $kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" . KAKAO_REST_API_KEY . "&redirect_uri=" . urlencode(KAKAO_REDIRECT_URI) . "&response_type=code&state=" . urlencode($statePayload);
     header("Location: " . $kakaoAuthUrl);
     exit;
 } else {
