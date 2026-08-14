@@ -44,14 +44,14 @@
   - `api/request_action.php`, `auth/google_login.php`, `auth/kakao_login.php`, `public/index.html`에서 하드코딩 강제 덮어쓰기 로직 전면 삭제.
   - 관리자 UI에서 설정한 권한(`APPLICANT`, `TREASURER`, `ADMIN`)이 DB 및 `pending_users.json`에 영구히 저장되고 실시간 유지되도록 수정 완료.
 
-### 5) 테스트용 등급별 모드 전환기 (Simulated Role Mode Switcher) 실시간 반영
-- **배경**: 관리자 모드에서 테스트용 툴바 버튼(`[신청자 모드]`, `[재정부 모드]`, `[👑 관리자 모드]`)을 클릭해도 메뉴 탭 노출/숨김 상태가 바뀌지 않는 문제.
+### 5) 등급별 메뉴 탭 및 테스트용 모드 전환기 (Role Switcher) 엄격 권한 분리
+- **배경**: 재정담당자로 로그인 시 관리자 전용 모드 전환 버튼이 노출되거나, 탭 메뉴가 과도하게 보이는 현상 방지 요구.
 - **작업 내용**:
-  - `public/index.html` 내 `switchRoleMode(targetMode)` 및 `switchRole(role)` 함수 전면 보정.
-  - **신청자 모드 클릭 시**: `지출요청 목록`, `관리자` 탭 숨김처리 및 `요청서 작성`, `진행 현황`, `마이페이지` 탭만 표출.
-  - **재정부 모드 클릭 시**: `관리자` 탭 숨김처리 및 `지출요청 목록` 포함 주요 탭 표출.
-  - **관리자 모드 클릭 시**: 전체 5개 탭 전면 노출.
-  - 현재 선택된 모드 버튼에 시각적 2px outline 및 테두리 하이라이트 스타일 적용.
+  - `public/index.html` 내 `switchRoleMode(targetMode)` 및 `switchRole(role)` 함수 전면 고도화.
+  - **모드 전환 테스트 툴바 (`admin-test-mode-buttons`)**: 오직 사이트 관리자(`ADMIN`) 계정에만 표출되고 일반 재정담당자(`TREASURER`) 및 신청자(`APPLICANT`) 접속 시 100% 숨김 처리.
+  - **재정담당자(`TREASURER`) 탭 규칙**: `📋 지출요청 목록` 및 `👤 마이페이지` 탭만 깔끔하게 노출하고, 기본 탭을 `📋 지출요청 목록`으로 자동 설정.
+  - **신청자(`APPLICANT`) 탭 규칙**: `📄 요청서 작성`, `📋 진행 현황`, `👤 마이페이지` 탭 노출.
+  - **사이트 관리자(`ADMIN`) 탭 규칙**: 전체 5개 탭 전면 노출 및 모드 테스트 툴바 사용 가능.
 
 ---
 
