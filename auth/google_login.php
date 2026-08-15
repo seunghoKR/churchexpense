@@ -70,24 +70,34 @@ if (!$code) {
         $linkFile = __DIR__ . '/../api/social_links.json';
         $links = file_exists($linkFile) ? (json_decode(file_get_contents($linkFile), true) ?? []) : [];
 
-        $linkingPrimary = $_SESSION['linking_primary_email'] ?? $stateData['primary_email'] ?? null;
-        if (!empty($linkingPrimary) && strtolower($linkingPrimary) !== strtolower($email)) {
-            $links[strtolower($email)] = [
-                'primary_email' => strtolower($linkingPrimary),
-                'provider' => 'google',
-                'linked_at' => date('Y-m-d H:i:s')
-            ];
-            file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            $email = strtolower($linkingPrimary);
+        $isGoogleMasterAdmin = (strtolower($email) === 'leeshkr@gmail.com');
+
+        if ($isGoogleMasterAdmin) {
+            // 최고 관리자 계정은 절대 다른 이메일로 매핑되거나 덮어써지지 않음!
             unset($_SESSION['linking_primary_email']);
-        } elseif (!empty($links[strtolower($email)]['primary_email'])) {
-            $email = strtolower($links[strtolower($email)]['primary_email']);
+            if (isset($links['leeshkr@gmail.com'])) {
+                unset($links['leeshkr@gmail.com']);
+                file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+        } else {
+            $linkingPrimary = $_SESSION['linking_primary_email'] ?? $stateData['primary_email'] ?? null;
+            if (!empty($linkingPrimary) && strtolower($linkingPrimary) !== strtolower($email)) {
+                $links[strtolower($email)] = [
+                    'primary_email' => strtolower($linkingPrimary),
+                    'provider' => 'google',
+                    'linked_at' => date('Y-m-d H:i:s')
+                ];
+                file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                $email = strtolower($linkingPrimary);
+                unset($_SESSION['linking_primary_email']);
+            } elseif (!empty($links[strtolower($email)]['primary_email'])) {
+                $email = strtolower($links[strtolower($email)]['primary_email']);
+            }
         }
 
         require_once __DIR__ . '/../config/db.php';
 
-        $adminEmails = ['leeshkr@gmail.com', 'ktbmks@hanmail.net'];
-        $isAdmin = in_array(strtolower($email), array_map('strtolower', $adminEmails));
+        $isAdmin = (strtolower($email) === 'leeshkr@gmail.com');
         $role = $isAdmin ? 'ADMIN' : 'APPLICANT';
         $status = $isAdmin ? 'APPROVED' : 'PENDING';
 
@@ -99,8 +109,8 @@ if (!$code) {
                 $stmt->execute([strtolower($email)]);
                 $uRow = $stmt->fetch();
                 if ($uRow) {
-                    if (!empty($uRow['role'])) $role = $uRow['role'];
-                    if (!empty($uRow['status'])) $status = $uRow['status'];
+                    if (!$isAdmin && !empty($uRow['role'])) $role = $uRow['role'];
+                    if (!$isAdmin && !empty($uRow['status'])) $status = $uRow['status'];
                     if (!empty($uRow['name'])) $name = $uRow['name'];
                 }
             } catch (Exception $e) {}
@@ -111,15 +121,15 @@ if (!$code) {
             $fileData = json_decode(file_get_contents($logFile), true) ?? [];
             foreach ($fileData as $fUser) {
                 if (strtolower($fUser['email'] ?? '') === strtolower($email)) {
-                    if (!empty($fUser['role'])) $role = $fUser['role'];
-                    if (!empty($fUser['status'])) $status = $fUser['status'];
+                    if (!$isAdmin && !empty($fUser['role'])) $role = $fUser['role'];
+                    if (!$isAdmin && !empty($fUser['status'])) $status = $fUser['status'];
                     if (!empty($fUser['name'])) $name = $fUser['name'];
                     break;
                 }
             }
         }
 
-        if (strtolower($email) === 'leeshkr@gmail.com' && empty($role)) {
+        if ($isAdmin) {
             $role = 'ADMIN';
             $status = 'APPROVED';
         }

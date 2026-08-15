@@ -16,8 +16,8 @@ if ($primaryEmailParam) {
 
 if (!$code) {
     $statePayload = json_encode(['primary_email' => $_SESSION['linking_primary_email'] ?? '']);
-    // 1. 카카오 인가 코드 요청 URL 생성 및 이동 (KOE205 에러 방지를 위해 기본 인증 URL로 사용)
-    $kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" . KAKAO_REST_API_KEY . "&redirect_uri=" . urlencode(KAKAO_REDIRECT_URI) . "&response_type=code&state=" . urlencode($statePayload);
+    // 1. 카카오 인가 코드 요청 URL 생성 및 이동 (이메일 및 메시지 스코프 포함)
+    $kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" . KAKAO_REST_API_KEY . "&redirect_uri=" . urlencode(KAKAO_REDIRECT_URI) . "&response_type=code&scope=account_email,talk_message&state=" . urlencode($statePayload);
     header("Location: " . $kakaoAuthUrl);
     exit;
 } else {
@@ -48,6 +48,8 @@ if (!$code) {
 
     $tokenData = json_decode($response, true);
     $accessToken = $tokenData['access_token'] ?? null;
+    $refreshToken = $tokenData['refresh_token'] ?? null;
+    $expiresIn = (int)($tokenData['expires_in'] ?? 21600);
 
     if ($accessToken) {
         // 3. 토큰으로 카카오 사용자 정보 조회
@@ -71,29 +73,56 @@ if (!$code) {
         $email = $kakaoAccount['email'] ?? ('kakao_' . ($userInfo['id'] ?? rand(100, 999)) . '@kakao.com');
         $kakaoId = $userInfo['id'] ?? rand(100, 999);
 
+        // 💾 카카오 토큰 영구 저장 (나에게 카톡 메시지 보내기용)
+        $tokenFile = __DIR__ . '/../api/kakao_tokens.json';
+        $tokens = file_exists($tokenFile) ? (json_decode(file_get_contents($tokenFile), true) ?? []) : [];
+        $tokenRecord = [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_at' => time() + $expiresIn,
+            'kakao_id' => $kakaoId,
+            'nickname' => $nickname,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $tokens[strtolower($email)] = $tokenRecord;
+        $tokens['kakao_' . $kakaoId] = $tokenRecord;
+
         // 🔗 듀얼 소셜 연동 처리 (OAuth state 및 Session 지원)
         $linkFile = __DIR__ . '/../api/social_links.json';
         $links = file_exists($linkFile) ? (json_decode(file_get_contents($linkFile), true) ?? []) : [];
 
-        $stateData = json_decode($_GET['state'] ?? '{}', true);
-        $linkingPrimary = $_SESSION['linking_primary_email'] ?? $stateData['primary_email'] ?? null;
-        if (!empty($linkingPrimary) && strtolower($linkingPrimary) !== strtolower($email)) {
-            $links[strtolower($email)] = [
-                'primary_email' => strtolower($linkingPrimary),
-                'provider' => 'kakao',
-                'linked_at' => date('Y-m-d H:i:s')
-            ];
-            file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            $email = strtolower($linkingPrimary);
+        $isKakaoMasterAdmin = (strtolower($email) === 'leeshkr@gmail.com');
+
+        if ($isKakaoMasterAdmin) {
             unset($_SESSION['linking_primary_email']);
-        } elseif (!empty($links[strtolower($email)]['primary_email'])) {
-            $email = strtolower($links[strtolower($email)]['primary_email']);
+            if (isset($links['leeshkr@gmail.com'])) {
+                unset($links['leeshkr@gmail.com']);
+                file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+        } else {
+            $stateData = json_decode($_GET['state'] ?? '{}', true);
+            $linkingPrimary = $_SESSION['linking_primary_email'] ?? $stateData['primary_email'] ?? null;
+            if (!empty($linkingPrimary) && strtolower($linkingPrimary) !== strtolower($email) && strtolower($linkingPrimary) !== 'leeshkr@gmail.com') {
+                $links[strtolower($email)] = [
+                    'primary_email' => strtolower($linkingPrimary),
+                    'provider' => 'kakao',
+                    'linked_at' => date('Y-m-d H:i:s')
+                ];
+                file_put_contents($linkFile, json_encode($links, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                $email = strtolower($linkingPrimary);
+                $tokens[strtolower($linkingPrimary)] = $tokenRecord; // 기본 이메일 키로도 토큰 매핑!
+                unset($_SESSION['linking_primary_email']);
+            } elseif (!empty($links[strtolower($email)]['primary_email'])) {
+                $primaryEmailMapped = strtolower($links[strtolower($email)]['primary_email']);
+                $tokens[$primaryEmailMapped] = $tokenRecord;
+                $email = $primaryEmailMapped;
+            }
         }
+        file_put_contents($tokenFile, json_encode($tokens, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         require_once __DIR__ . '/../config/db.php';
 
-        $adminEmails = ['leeshkr@gmail.com', 'ktbmks@hanmail.net'];
-        $isAdmin = in_array(strtolower($email), array_map('strtolower', $adminEmails));
+        $isAdmin = (strtolower($email) === 'leeshkr@gmail.com');
         $role = $isAdmin ? 'ADMIN' : 'APPLICANT';
         $status = $isAdmin ? 'APPROVED' : 'PENDING';
 
@@ -105,8 +134,8 @@ if (!$code) {
                 $stmt->execute([strtolower($email)]);
                 $uRow = $stmt->fetch();
                 if ($uRow) {
-                    if (!empty($uRow['role'])) $role = $uRow['role'];
-                    if (!empty($uRow['status'])) $status = $uRow['status'];
+                    if (!$isAdmin && !empty($uRow['role'])) $role = $uRow['role'];
+                    if (!$isAdmin && !empty($uRow['status'])) $status = $uRow['status'];
                     if (!empty($uRow['name'])) $nickname = $uRow['name'];
                 }
             } catch (Exception $e) {}
@@ -117,15 +146,15 @@ if (!$code) {
             $fileData = json_decode(file_get_contents($logFile), true) ?? [];
             foreach ($fileData as $fUser) {
                 if (strtolower($fUser['email'] ?? '') === strtolower($email)) {
-                    if (!empty($fUser['role'])) $role = $fUser['role'];
-                    if (!empty($fUser['status'])) $status = $fUser['status'];
+                    if (!$isAdmin && !empty($fUser['role'])) $role = $fUser['role'];
+                    if (!$isAdmin && !empty($fUser['status'])) $status = $fUser['status'];
                     if (!empty($fUser['name'])) $nickname = $fUser['name'];
                     break;
                 }
             }
         }
 
-        if (strtolower($email) === 'leeshkr@gmail.com' && empty($role)) {
+        if ($isAdmin) {
             $role = 'ADMIN';
             $status = 'APPROVED';
         }

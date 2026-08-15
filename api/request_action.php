@@ -96,7 +96,7 @@ function handleUpdateMyPage(array $user) {
     $emailsToUpdate = array_values(array_unique(array_filter($emailsToUpdate)));
 
     // 기존 계정에 부여된 높은 권한 (TREASURER / ADMIN) 조회 및 계정 이동 보존
-    $existingRole = 'APPLICANT';
+    $existingRole = '';
     $pdo = getDbConnection();
     if ($pdo) {
         foreach ($emailsToUpdate as $eCheck) {
@@ -134,27 +134,32 @@ function handleUpdateMyPage(array $user) {
     $mode = $_POST['preferred_mode'] ?? 'onepage';
     $theme = $_POST['preferred_theme'] ?? 'green';
 
-    $role = !empty($existingRole) ? $existingRole : (strtolower($rawEmail) === 'leeshkr@gmail.com' ? 'ADMIN' : 'APPLICANT');
+    $isMasterAdmin = (strtolower($rawEmail) === 'leeshkr@gmail.com');
+    $role = $isMasterAdmin ? 'ADMIN' : (!empty($existingRole) ? $existingRole : 'APPLICANT');
 
-    foreach ($emailsToUpdate as $email) {
-        if (!empty($email)) {
+    // 1. 대표 이메일(rawEmail) 단일 레코드만 DB에 등록/갱신
+    if ($pdo) {
+        try {
+            $isEmailAdmin = (strtolower($rawEmail) === 'leeshkr@gmail.com');
             $status = 'APPROVED';
-            $eRole = $role;
+            $eRole = $isEmailAdmin ? 'ADMIN' : $role;
 
-            if ($pdo) {
-                try {
-                    $stmt = $pdo->prepare("
-                        INSERT INTO z_ch_saenuri_users (email, name, title_name, department, default_bank, default_account, default_holder, preferred_mode, preferred_theme, role, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE 
-                        name=VALUES(name), title_name=VALUES(title_name), department=VALUES(department), 
-                        default_bank=VALUES(default_bank), default_account=VALUES(default_account), default_holder=VALUES(default_holder),
-                        preferred_mode=VALUES(preferred_mode), preferred_theme=VALUES(preferred_theme), role=VALUES(role), status=VALUES(status)
-                    ");
-                    $stmt->execute([$email, $name, $titleName, $deptName, $bank, $account, $holder, $mode, $theme, $eRole, $status]);
-                } catch (Exception $e) {}
+            $stmt = $pdo->prepare("
+                INSERT INTO z_ch_saenuri_users (email, name, title_name, department, default_bank, default_account, default_holder, preferred_mode, preferred_theme, role, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                name=VALUES(name), title_name=VALUES(title_name), department=VALUES(department), 
+                default_bank=VALUES(default_bank), default_account=VALUES(default_account), default_holder=VALUES(default_holder),
+                preferred_mode=VALUES(preferred_mode), preferred_theme=VALUES(preferred_theme), role=VALUES(role), status=VALUES(status)
+            ");
+            $stmt->execute([$rawEmail, $name, $titleName, $deptName, $bank, $account, $holder, $mode, $theme, $eRole, $status]);
+
+            // 이전 연동 이메일이 DB에 별도 행으로 분리되어 있었다면 대표 이메일로 통합하고 이전 행 삭제 (중복 100% 제거)
+            if (!empty($origEmail) && $origEmail !== $rawEmail && $origEmail !== 'leeshkr@gmail.com') {
+                $delPrev = $pdo->prepare("DELETE FROM z_ch_saenuri_users WHERE LOWER(email) = ?");
+                $delPrev->execute([$origEmail]);
             }
-        }
+        } catch (Exception $e) {}
     }
 
     // pending_users.json 백업에서 이전 origEmail 엔트리를 rawEmail 단일 항목으로 병합 (중복 분리 100% 제거)
@@ -358,6 +363,20 @@ function handleCreateRequest(array $user) {
 
     $receiptUrl = !empty($receiptUrls) ? $receiptUrls[0] : '';
 
+    // 💾 DB z_ch_saenuri_expense_receipts 테이블에 영수증 파일 경로 등록
+    if ($pdo && !empty($receiptUrls) && $requestId) {
+        try {
+            $rStmt = $pdo->prepare("
+                INSERT INTO z_ch_saenuri_expense_receipts (request_id, original_name, file_path, file_size)
+                VALUES (?, ?, ?, ?)
+            ");
+            foreach ($receiptUrls as $idx => $rPath) {
+                $origName = isset($names[$idx]) ? $names[$idx] : ('receipt_' . ($idx + 1) . '.jpg');
+                $rStmt->execute([$requestId, $origName, $rPath, 0]);
+            }
+        } catch (Exception $e) {}
+    }
+
     // JSON 백업 파일 저장
     $newRecord = [
         'id' => $requestId,
@@ -433,9 +452,14 @@ function handleGetExpenseRequests() {
                     $iStmt->execute([$row['id']]);
                     $items = $iStmt->fetchAll();
 
+                    // 🖼️ 영수증 목록 DB 및 JSON 동시 조회
+                    $rcptStmt = $pdo->prepare("SELECT file_path FROM z_ch_saenuri_expense_receipts WHERE request_id = ? ORDER BY id ASC");
+                    $rcptStmt->execute([$row['id']]);
+                    $dbReceipts = $rcptStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
                     $jMatch = $jsonMap[$row['doc_no']] ?? null;
-                    $rUrl = $row['receipt_url'] ?? ($jMatch['receipt_url'] ?? '');
-                    $rUrls = !empty($jMatch['receipt_urls']) ? $jMatch['receipt_urls'] : (!empty($rUrl) ? [$rUrl] : []);
+                    $rUrls = !empty($dbReceipts) ? $dbReceipts : (!empty($jMatch['receipt_urls']) ? $jMatch['receipt_urls'] : []);
+                    $rUrl = !empty($rUrls) ? $rUrls[0] : ($row['receipt_url'] ?? ($jMatch['receipt_url'] ?? ''));
 
                     $dbRequests[] = [
                         'id' => $row['id'],
@@ -480,11 +504,16 @@ function handleUpdateStatus(array $user) {
     $docNo = $_POST['doc_no'] ?? $_POST['request_id'] ?? '';
     $status = $_POST['status'] ?? 'APPROVED';
     $rejectReason = trim($_POST['reject_reason'] ?? '');
+    $matchedReq = null;
 
     if ($pdo && !empty($docNo)) {
         try {
             $stmt = $pdo->prepare("UPDATE z_ch_saenuri_expense_requests SET status = ?, reject_reason = ? WHERE doc_no = ? OR id = ?");
             $stmt->execute([$status, $rejectReason, $docNo, $docNo]);
+
+            $selectStmt = $pdo->prepare("SELECT * FROM z_ch_saenuri_expense_requests WHERE doc_no = ? OR id = ?");
+            $selectStmt->execute([$docNo, $docNo]);
+            $matchedReq = $selectStmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {}
     }
 
@@ -495,10 +524,32 @@ function handleUpdateStatus(array $user) {
             if (($req['doc_no'] ?? '') === $docNo || (string)($req['id'] ?? '') === (string)$docNo) {
                 $req['status'] = $status;
                 if (!empty($rejectReason)) $req['reject_reason'] = $rejectReason;
+                if (!$matchedReq) $matchedReq = $req;
                 break;
             }
         }
         file_put_contents($logFile, json_encode($fileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    // 🔔 요청자에게 상태 변경(승인/반려/집행완료) 카카오톡 알림 발송!
+    if ($matchedReq) {
+        $matchedReq['status'] = $status;
+        if (!empty($rejectReason)) $matchedReq['reject_reason'] = $rejectReason;
+        if (empty($matchedReq['applicant_email']) && file_exists($logFile)) {
+            $fList = json_decode(file_get_contents($logFile), true) ?? [];
+            foreach ($fList as $fReq) {
+                if (($fReq['doc_no'] ?? '') === $docNo || (string)($fReq['id'] ?? '') === (string)$docNo) {
+                    if (!empty($fReq['applicant_email'])) $matchedReq['applicant_email'] = $fReq['applicant_email'];
+                    if (!empty($fReq['applicant_name'])) $matchedReq['applicant_name'] = $fReq['applicant_name'];
+                    if (!empty($fReq['total_amount'])) $matchedReq['total_amount'] = $fReq['total_amount'];
+                    if (!empty($fReq['bank_name'])) $matchedReq['bank_name'] = $fReq['bank_name'];
+                    if (!empty($fReq['account_number'])) $matchedReq['account_number'] = $fReq['account_number'];
+                    if (!empty($fReq['account_holder'])) $matchedReq['account_holder'] = $fReq['account_holder'];
+                    break;
+                }
+            }
+        }
+        notifyExpenseEvent('STATUS_UPDATE', $matchedReq);
     }
 
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_POST['ajax'])) {
@@ -651,8 +702,10 @@ function handleGetPendingUsers() {
 
     if ($pdo) {
         try {
-            $stmt = $pdo->query("SELECT id, email, name, department, title_name, status, created_at FROM z_ch_saenuri_users WHERE status = 'PENDING' ORDER BY id DESC");
-            $pendingList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $pdo->query("SELECT id, email, name, department, title_name, status, created_at FROM z_ch_saenuri_users WHERE UPPER(status) = 'PENDING' ORDER BY id DESC");
+            if ($stmt) {
+                $pendingList = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            }
         } catch (Exception $e) {
             $pendingList = [];
         }
@@ -663,31 +716,39 @@ function handleGetPendingUsers() {
     if (file_exists($logFile)) {
         $fileData = json_decode(file_get_contents($logFile), true) ?? [];
         foreach ($fileData as $fUser) {
-            if (($fUser['status'] ?? 'PENDING') === 'PENDING') {
+            $fStatus = strtoupper(trim($fUser['status'] ?? 'PENDING'));
+            $fEmail = strtolower(trim($fUser['email'] ?? ''));
+            if ($fStatus === 'PENDING' && !empty($fEmail)) {
                 $alreadyInList = false;
                 foreach ($pendingList as $pUser) {
-                    if (strtolower($pUser['email']) === strtolower($fUser['email'])) {
+                    $pEmail = strtolower(trim($pUser['email'] ?? ''));
+                    if ($pEmail === $fEmail) {
                         $alreadyInList = true;
                         break;
                     }
                 }
                 if (!$alreadyInList) {
-                    $pendingList[] = $fUser;
+                    $pendingList[] = [
+                        'id' => $fUser['id'] ?? time(),
+                        'email' => $fUser['email'],
+                        'name' => $fUser['name'] ?? '성도',
+                        'department' => $fUser['department'] ?? '청년부',
+                        'title_name' => $fUser['title_name'] ?? '성도',
+                        'status' => 'PENDING',
+                        'created_at' => $fUser['created_at'] ?? date('Y-m-d H:i')
+                    ];
                 }
             }
         }
     }
 
-    // 삭제된 회원 필터링
-    $deletedFile = __DIR__ . '/deleted_users.json';
-    $deletedList = file_exists($deletedFile) ? (json_decode(file_get_contents($deletedFile), true) ?? []) : [];
-    $deletedList = array_map('strtolower', (array)$deletedList);
-
-    $pendingList = array_values(array_filter($pendingList, function($u) use ($deletedList) {
-        return !in_array(strtolower($u['email'] ?? ''), $deletedList);
+    // 사이트 관리자(leeshkr@gmail.com)만 제외하고 모든 PENDING 유저 반환!
+    $pendingList = array_values(array_filter($pendingList, function($u) {
+        $uEmail = strtolower(trim($u['email'] ?? ''));
+        return !empty($uEmail) && $uEmail !== 'leeshkr@gmail.com';
     }));
 
-    echo json_encode(['status' => 'success', 'data' => $pendingList]);
+    echo json_encode(['status' => 'success', 'data' => $pendingList], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -740,6 +801,9 @@ function handleApproveUserApi() {
 
 function resolvePrimaryEmail($email) {
     $email = strtolower(trim($email));
+    if ($email === 'leeshkr@gmail.com') {
+        return 'leeshkr@gmail.com';
+    }
     $linkFile = __DIR__ . '/social_links.json';
     if (file_exists($linkFile)) {
         $links = json_decode(file_get_contents($linkFile), true) ?? [];
@@ -756,6 +820,9 @@ function resolvePrimaryEmail($email) {
 
 function getLinkedEmailsForUser($email) {
     $primary = resolvePrimaryEmail($email);
+    if ($primary === 'leeshkr@gmail.com') {
+        return ['leeshkr@gmail.com'];
+    }
     $linkFile = __DIR__ . '/social_links.json';
     $linked = [$primary, strtolower(trim($email))];
     if (file_exists($linkFile)) {
@@ -807,16 +874,41 @@ function handleCheckUserStatus() {
                 if (!empty($u['default_bank'])) $bank = $u['default_bank'];
                 if (!empty($u['default_account'])) $account = $u['default_account'];
                 if (!empty($u['default_holder'])) $holder = $u['default_holder'];
+
+                if ($isDevAdmin) {
+                    $role = 'ADMIN';
+                    $userStatus = 'APPROVED';
+                    if (($u['role'] ?? '') !== 'ADMIN' || ($u['status'] ?? '') !== 'APPROVED') {
+                        try {
+                            $upFix = $pdo->prepare("UPDATE z_ch_saenuri_users SET role = 'ADMIN', status = 'APPROVED' WHERE LOWER(email) = ?");
+                            $upFix->execute([$email]);
+                        } catch (Exception $eFix) {}
+                    }
+                }
+            } else {
+                // 신규 접속 회원 DB에 자동 등록 (관리자는 APPROVED, 일반 성도는 PENDING으로 승인대기 등록!)
+                try {
+                    $defName = !empty($name) ? $name : '성도';
+                    if ($isDevAdmin) {
+                        $inFix = $pdo->prepare("INSERT INTO z_ch_saenuri_users (email, name, title_name, department, role, status) VALUES (?, '이승호 개발자', '개발자/관리자', '행정/재정부', 'ADMIN', 'APPROVED') ON DUPLICATE KEY UPDATE role='ADMIN', status='APPROVED'");
+                        $inFix->execute([$email]);
+                    } else {
+                        $inNew = $pdo->prepare("INSERT INTO z_ch_saenuri_users (email, name, title_name, department, role, status) VALUES (?, ?, '성도', '청년부', 'APPLICANT', 'PENDING')");
+                        $inNew->execute([$email, $defName]);
+                    }
+                } catch (Exception $eFix) {}
             }
         } catch (Exception $e) {}
     }
 
-    // 파일 백업 검사
+    // 파일 백업 검사 및 신규 유저 자동 동기화
     $logFile = __DIR__ . '/pending_users.json';
+    $foundInFile = false;
     if (file_exists($logFile)) {
         $fileData = json_decode(file_get_contents($logFile), true) ?? [];
         foreach ($fileData as $fUser) {
             if (strtolower($fUser['email'] ?? '') === $email) {
+                $foundInFile = true;
                 if (($fUser['status'] ?? '') === 'APPROVED') $userStatus = 'APPROVED';
                 if (!empty($fUser['role'])) $role = $fUser['role'];
                 if (empty($name) && !empty($fUser['name'])) $name = $fUser['name'];
@@ -828,6 +920,24 @@ function handleCheckUserStatus() {
                 break;
             }
         }
+        if (!$foundInFile && !$isDevAdmin) {
+            $fileData[] = [
+                'id' => time(),
+                'email' => $email,
+                'name' => !empty($name) ? $name : '성도',
+                'title_name' => '성도',
+                'department' => '청년부',
+                'role' => 'APPLICANT',
+                'status' => 'PENDING',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            file_put_contents($logFile, json_encode($fileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+    }
+
+    if ($isDevAdmin) {
+        $role = 'ADMIN';
+        $userStatus = 'APPROVED';
     }
 
     echo json_encode([
@@ -844,7 +954,7 @@ function handleCheckUserStatus() {
     exit;
 }
 
-// 👑 사이트 관리자 전용 - 모든 교인 회원 및 관리자 목록 조회 API (관리자 포함 전체 노출!)
+// 👑 사이트 관리자 전용 - 승인 완료된 교인 회원 및 관리자 목록 조회 API (status = APPROVED 전용)
 function handleGetApprovedUsers() {
     header('Content-Type: application/json; charset=utf-8');
     $pdo = getDbConnection();
@@ -852,20 +962,22 @@ function handleGetApprovedUsers() {
 
     if ($pdo) {
         try {
-            $stmt = $pdo->query("SELECT id, email, name, department, title_name, role, status, created_at FROM z_ch_saenuri_users ORDER BY id DESC");
-            $approvedList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // 오직 승인된 회원(status = 'APPROVED')만 조회!
+            $stmt = $pdo->query("SELECT id, email, name, department, title_name, role, status, created_at FROM z_ch_saenuri_users WHERE UPPER(status) = 'APPROVED' ORDER BY id DESC");
+            $approvedList = $stmt ? ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
         } catch (Exception $e) {
             $approvedList = [];
         }
     }
 
-    // 파일 백업 데이터와 병합 및 저장된 프로필 정보 100% 실시간 덮어쓰기!
+    // 파일 백업 데이터와 병합 (오직 status = APPROVED 인 유저만!)
     $logFile = __DIR__ . '/pending_users.json';
     if (file_exists($logFile)) {
         $fileData = json_decode(file_get_contents($logFile), true) ?? [];
         foreach ($fileData as $fUser) {
-            $fEmail = strtolower($fUser['email'] ?? '');
-            if (!empty($fEmail)) {
+            $fEmail = strtolower(trim($fUser['email'] ?? ''));
+            $fStatus = strtoupper(trim($fUser['status'] ?? 'PENDING'));
+            if (!empty($fEmail) && $fStatus === 'APPROVED') {
                 $alreadyInList = false;
                 foreach ($approvedList as &$pUser) {
                     if (strtolower($pUser['email'] ?? '') === $fEmail) {
@@ -885,7 +997,7 @@ function handleGetApprovedUsers() {
                         'department' => $fUser['department'] ?? '행정/재정부',
                         'title_name' => $fUser['title_name'] ?? '성도',
                         'role' => $fUser['role'] ?? ($fEmail === 'leeshkr@gmail.com' ? 'ADMIN' : 'APPLICANT'),
-                        'status' => $fUser['status'] ?? 'APPROVED',
+                        'status' => 'APPROVED',
                         'created_at' => $fUser['created_at'] ?? date('Y-m-d H:i')
                     ];
                 }
@@ -893,98 +1005,54 @@ function handleGetApprovedUsers() {
         }
     }
 
-    // 삭제된 회원 목록 불러오기
-    $deletedFile = __DIR__ . '/deleted_users.json';
-    $deletedList = file_exists($deletedFile) ? (json_decode(file_get_contents($deletedFile), true) ?? []) : [];
-    $deletedList = array_map('strtolower', (array)$deletedList);
-
-    // 삭제된 회원 필터링
-    $approvedList = array_values(array_filter($approvedList, function($u) use ($deletedList) {
-        return !in_array(strtolower($u['email'] ?? ''), $deletedList);
-    }));
-
-    // 기본 계정들 기본 승인 상태 보장
-    foreach ($approvedList as &$userItem) {
-        $uEmail = strtolower($userItem['email'] ?? '');
-        if ($uEmail === 'leeshkr@gmail.com' && empty($userItem['role'])) {
-            $userItem['role'] = 'ADMIN';
-        }
-        if (in_array($uEmail, ['leeshkr@gmail.com', 'ktbmks@hanmail.net']) && empty($userItem['status'])) {
-            $userItem['status'] = 'APPROVED';
-        }
-    }
-
-    // 기본 관리자 계정들이 아예 비어있고 삭제되지 않았을 경우 고정 기본값 포함!
+    // 기본 관리자 계정 기본 보장 (leeshkr@gmail.com, ktbmks@hanmail.net)
     $existingEmails = array_map(function($u) { return strtolower($u['email'] ?? ''); }, $approvedList);
-    if (!in_array('ktbmks@hanmail.net', $existingEmails) && !in_array('ktbmks@hanmail.net', $deletedList)) {
+    if (!in_array('ktbmks@hanmail.net', $existingEmails)) {
         $approvedList[] = [
             'id' => 9991,
             'email' => 'ktbmks@hanmail.net',
-            'name' => '김태봉',
-            'department' => '교육-청년',
+            'name' => '김태봉 목사님',
+            'department' => '행정/재정부',
             'title_name' => '목사',
-            'role' => 'ADMIN',
+            'role' => 'TREASURER',
             'status' => 'APPROVED',
             'created_at' => date('Y-m-d H:i')
         ];
     }
-    if (!in_array('leeshkr@gmail.com', $existingEmails) && !in_array('leeshkr@gmail.com', $deletedList)) {
+    if (!in_array('leeshkr@gmail.com', $existingEmails)) {
         $approvedList[] = [
             'id' => 9992,
             'email' => 'leeshkr@gmail.com',
             'name' => '이승호 개발자',
-            'department' => '교육-청년',
-            'title_name' => '집사',
+            'department' => '행정/재정부',
+            'title_name' => '관리자',
             'role' => 'ADMIN',
             'status' => 'APPROVED',
             'created_at' => date('Y-m-d H:i')
         ];
     }
-    if (!in_array('nuriohga@gmail.com', $existingEmails) && !in_array('nuriohga@gmail.com', $deletedList)) {
-        $approvedList[] = [
-            'id' => 9993,
-            'email' => 'nuriohga@gmail.com',
-            'name' => '누리오(NURIOH)',
-            'department' => '교육-청소년',
-            'title_name' => '성도',
-            'role' => 'APPLICANT',
-            'status' => 'APPROVED',
-            'created_at' => date('Y-m-d H:i')
-        ];
-    }
 
-    // 🔗 소셜 듀얼 계정 병합 및 중복 회원 1인 단일화 (Primary Email 기준)
-    $mergedMap = [];
-    foreach ($approvedList as $uItem) {
-        $rEmail = strtolower(trim($uItem['email'] ?? ''));
-        if (empty($rEmail)) continue;
-
-        $pEmail = resolvePrimaryEmail($rEmail);
-        
-        if (!isset($mergedMap[$pEmail])) {
-            $uItem['email'] = $pEmail;
-            $mergedMap[$pEmail] = $uItem;
-        } else {
-            $existing = &$mergedMap[$pEmail];
-            // 더 높은 권한 (ADMIN > TREASURER > APPLICANT) 승계
-            $rolePriority = ['ADMIN' => 3, 'TREASURER' => 2, 'APPLICANT' => 1];
-            $currP = $rolePriority[$existing['role'] ?? 'APPLICANT'] ?? 1;
-            $newP = $rolePriority[$uItem['role'] ?? 'APPLICANT'] ?? 1;
-            if ($newP > $currP) {
-                $existing['role'] = $uItem['role'];
-            }
-            if (!empty($uItem['name']) && $uItem['name'] !== '성도님' && $uItem['name'] !== '카카오 성도') {
-                $existing['name'] = $uItem['name'];
-            }
+    // 🔗 소셜 연동된 서브 계정(primary_email에 종속된 계정) 필터링
+    $linkFile = __DIR__ . '/social_links.json';
+    $links = file_exists($linkFile) ? (json_decode(file_get_contents($linkFile), true) ?? []) : [];
+    $subEmails = [];
+    foreach ($links as $secEmail => $info) {
+        $p = strtolower($info['primary_email'] ?? '');
+        $sec = strtolower($secEmail);
+        if (!empty($p) && $p !== $sec) {
+            $subEmails[] = $sec;
         }
     }
-    $approvedList = array_values($mergedMap);
+    $approvedList = array_values(array_filter($approvedList, function($u) use ($subEmails) {
+        $uE = strtolower(trim($u['email'] ?? ''));
+        return !empty($uE) && !in_array($uE, $subEmails);
+    }));
 
-    echo json_encode(['status' => 'success', 'data' => $approvedList]);
+    echo json_encode(['status' => 'success', 'data' => $approvedList], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// 👑 회원 완전히 삭제 처리 API
+// 👑 회원 완전히 삭제 처리 API (DB, 백업, 소셜연동, 토큰 모든 저장소에서 100% 완전 삭제)
 function handleDeleteUser() {
     header('Content-Type: application/json; charset=utf-8');
     $email = strtolower(trim($_POST['email'] ?? $_GET['email'] ?? ''));
@@ -994,7 +1062,7 @@ function handleDeleteUser() {
         exit;
     }
 
-    // 1. DB에서 회원 삭제
+    // 1. DB에서 완전 삭제
     $pdo = getDbConnection();
     if ($pdo) {
         try {
@@ -1003,36 +1071,42 @@ function handleDeleteUser() {
         } catch (Exception $e) {}
     }
 
-    // 2. pending_users.json에서 회원 삭제
+    // 2. pending_users.json에서 완전 삭제
     $logFile = __DIR__ . '/pending_users.json';
     if (file_exists($logFile)) {
         $fileData = json_decode(file_get_contents($logFile), true) ?? [];
         $filtered = array_values(array_filter($fileData, function($u) use ($email) {
-            return strtolower($u['email'] ?? '') !== $email;
+            return strtolower(trim($u['email'] ?? '')) !== $email;
         }));
         file_put_contents($logFile, json_encode($filtered, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 
-    // 3. social_links.json에서 연동 정보 삭제
+    // 3. social_links.json에서 완전 삭제
     $socialFile = __DIR__ . '/social_links.json';
     if (file_exists($socialFile)) {
         $socialData = json_decode(file_get_contents($socialFile), true) ?? [];
-        $socialFiltered = array_values(array_filter($socialData, function($s) use ($email) {
-            return strtolower($s['primary_email'] ?? '') !== $email && strtolower($s['secondary_email'] ?? '') !== $email;
-        }));
-        file_put_contents($socialFile, json_encode($socialFiltered, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if (isset($socialData[$email])) {
+            unset($socialData[$email]);
+        }
+        foreach ($socialData as $k => $s) {
+            if (strtolower($s['primary_email'] ?? '') === $email) {
+                unset($socialData[$k]);
+            }
+        }
+        file_put_contents($socialFile, json_encode($socialData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 
-    // 4. deleted_users.json에 기록하여 재복구 방지
-    $deletedFile = __DIR__ . '/deleted_users.json';
-    $deletedList = file_exists($deletedFile) ? (json_decode(file_get_contents($deletedFile), true) ?? []) : [];
-    if (!is_array($deletedList)) $deletedList = [];
-    if (!in_array($email, $deletedList)) {
-        $deletedList[] = $email;
-        file_put_contents($deletedFile, json_encode($deletedList, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    // 4. kakao_tokens.json에서 토큰 완전 삭제
+    $tokenFile = __DIR__ . '/kakao_tokens.json';
+    if (file_exists($tokenFile)) {
+        $tokenData = json_decode(file_get_contents($tokenFile), true) ?? [];
+        if (isset($tokenData[$email])) {
+            unset($tokenData[$email]);
+            file_put_contents($tokenFile, json_encode($tokenData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
     }
 
-    echo json_encode(['status' => 'success', 'message' => '회원 계정이 완전히 삭제되었습니다.']);
+    echo json_encode(['status' => 'success', 'message' => '회원 계정이 모든 저장소에서 완전히 삭제되었습니다.']);
     exit;
 }
 
@@ -1176,81 +1250,213 @@ function handleGetSocialLinks() {
     exit;
 }
 
-// 🔔 이벤트 발생 시 관리자 및 요청자 카카오톡 알림 발송 래퍼
+// 🔔 이벤트 발생 시 관리자 및 요청자 카카오톡 알림 발송 래퍼 (중복 발송 100% 차단)
 function notifyExpenseEvent($type, $data) {
-    // DB 및 pending_users.json에서 모든 재정부/관리자 이메일 동적 추출
-    $adminEmails = ['leeshkr@gmail.com', 'ktbmks@hanmail.net', 'leesh@naver.com'];
-    $pendingFile = __DIR__ . '/pending_users.json';
-    if (file_exists($pendingFile)) {
-        $pUsers = json_decode(file_get_contents($pendingFile), true) ?? [];
-        foreach ($pUsers as $pu) {
-            if (in_array($pu['role'] ?? '', ['ADMIN', 'TREASURER']) && !empty($pu['email'])) {
-                $adminEmails[] = strtolower($pu['email']);
-            }
-        }
-    }
-    $adminEmails = array_values(array_unique(array_filter($adminEmails)));
+    $docNo = $data['doc_no'] ?? '-';
+    $applicantName = $data['applicant_name'] ?? '성도';
+    $applicantEmail = strtolower(trim($data['applicant_email'] ?? ''));
+    $department = $data['department'] ?? '부서';
+    $totalAmount = (float)($data['total_amount'] ?? 0);
+    $purpose = $data['purpose'] ?? '비용 지출';
+    $bankName = $data['bank_name'] ?? '';
+    $accountNumber = $data['account_number'] ?? '';
+    $accountHolder = $data['account_holder'] ?? $applicantName;
+    $rejectReason = trim($data['reject_reason'] ?? '');
 
+    // 1️⃣ [요청 등록 완료]: 성도님이 요청서를 제출했을 때
     if ($type === 'NEW_REQUEST') {
-        $title = "📌 [신규 지출요청 등록 알림]";
-        $desc = "문서번호: " . ($data['doc_no'] ?? '-') . "\n"
-              . "요청자: " . ($data['applicant_name'] ?? '성도') . "\n"
-              . "요청부서: " . ($data['department'] ?? '부서') . "\n"
-              . "총 금액: " . number_format($data['total_amount'] ?? 0) . "원\n"
-              . "지출목적: " . ($data['purpose'] ?? '-');
+        // A. 요청자 본인에게 알림 (1통)
+        $userTitle = "📝 [지출요청서 접수 완료]";
+        $userDesc = "성도님의 지출요청서가 정상 접수되었습니다.\n\n"
+                  . "• 문서번호: " . $docNo . "\n"
+                  . "• 요청자: " . $applicantName . "\n"
+                  . "• 요청부서: " . $department . "\n"
+                  . "• 요청금액: " . number_format($totalAmount) . "원\n"
+                  . "• 지출목적: " . $purpose . "\n\n"
+                  . "담당 재정부 확인 후 결재가 진행됩니다.";
 
-        // 관리자/재정부 카카오톡 발송 (등록된 이메일 및 저장된 모든 재정부 카카오 토큰 대상)
-        $tokenFile = __DIR__ . '/kakao_tokens.json';
-        $tokens = file_exists($tokenFile) ? (json_decode(file_get_contents($tokenFile), true) ?? []) : [];
+        $applicantTarget = !empty($applicantEmail) ? $applicantEmail : $applicantName;
+        sendKakaoNotification($applicantTarget, $userTitle, $userDesc);
 
-        $sentTargets = [];
-        foreach ($adminEmails as $aEmail) {
-            sendKakaoNotification($aEmail, $title, $desc);
-            $sentTargets[] = strtolower($aEmail);
+        // B. 재정담당자/관리자에게 도착 알림 (관리자에게만 1통, 본인 신청 시 2중 발송 제외)
+        $isAdminApplicant = (strpos($applicantEmail, 'leesh') !== false || strpos($applicantName, '이승호') !== false);
+        if (!$isAdminApplicant) {
+            $adminTitle = "📌 [신규 지출요청 도착]";
+            $adminDesc = "새로운 지출요청서가 접수되었습니다.\n\n"
+                       . "• 문서번호: " . $docNo . "\n"
+                       . "• 요청자: " . $applicantName . " 성도\n"
+                       . "• 요청부서: " . $department . "\n"
+                       . "• 요청금액: " . number_format($totalAmount) . "원\n"
+                       . "• 지출목적: " . $purpose;
+            sendKakaoNotification('leeshkr@gmail.com', $adminTitle, $adminDesc);
         }
-
-        foreach (array_keys($tokens) as $tKey) {
-            if (strpos($tKey, 'kakao_') === 0 && !in_array($tKey, $sentTargets)) {
-                sendKakaoNotification($tKey, $title, $desc);
-                $sentTargets[] = $tKey;
-            }
-        }
-
-        // 요청자 본인에게 카카오톡 접수 확인 메시지 전송
-        if (!empty($data['applicant_email'])) {
-            sendKakaoNotification($data['applicant_email'], "✅ [지출요청서 정상 제출 안내]", "성도님의 지출요청서(" . ($data['doc_no'] ?? '') . ")가 접수되었습니다.\n담당 재정부 확인 후 결재가 진행됩니다.");
-        }
-    } elseif ($type === 'STATUS_UPDATE') {
-        $st = $data['status'] ?? '';
-        $docNo = $data['doc_no'] ?? '-';
-        $applicantName = $data['applicant_name'] ?? '성도';
+    } 
+    // 2️⃣ [상태 변경]: 재정부 지출 승인 / 반려 / 집행 완료
+    elseif ($type === 'STATUS_UPDATE') {
+        $st = $data['status'] ?? 'APPROVED';
 
         if ($st === 'APPROVED') {
+            // 2-1. 승인 완료 알림
             $title = "👍 [지출요청 결재 승인 완료]";
-            $desc = "성도님의 지출요청서 결재가 정상 승인되었습니다!\n\n"
+            $desc = "성도님의 지출요청서 결재가 승인되었습니다!\n\n"
                   . "• 문서번호: " . $docNo . "\n"
                   . "• 요청자: " . $applicantName . "\n"
+                  . "• 승인금액: " . number_format($totalAmount) . "원\n"
                   . "• 진행상태: 👍 승인 완료 (재정부 입금 집행 대기 중)";
-        } elseif ($st === 'PAID') {
-            $title = "💰 [지출금 계좌 입금 완료!]";
-            $desc = "성도님의 등록 계좌로 지출금 입금이 최종 완료되었습니다!\n\n"
+        } elseif ($st === 'REJECTED') {
+            // 2-2. 반려 처리 알림
+            $title = "❌ [지출요청 반려 안내]";
+            $desc = "성도님의 지출요청서가 반려되었습니다.\n\n"
                   . "• 문서번호: " . $docNo . "\n"
                   . "• 요청자: " . $applicantName . "\n"
-                  . "• 진행상태: 💰 최종 지급/입금 완료";
-        } elseif ($st === 'REJECTED') {
-            $title = "❌ [지출요청 반려 안내]";
-            $desc = "성도님의 지출요청서 결재가 반려되었습니다.\n\n"
+                  . "• 반려사유: " . ($rejectReason ?: '사유 미기재') . "\n\n"
+                  . "확인 후 필요 시 다시 신청해 주시기 바랍니다.";
+        } elseif ($st === 'PAID') {
+            // 3. 재정부 집행(입금) 완료 알림
+            $title = "💰 [지출금 계좌 입금 완료]";
+            $desc = "성도님의 등록 계좌로 지출금 입금이 완료되었습니다!\n\n"
                   . "• 문서번호: " . $docNo . "\n"
-                  . "• 반려 사유: " . ($data['reject_reason'] ?? '사유 미기재') . "\n"
-                  . "• 요청자: " . $applicantName;
+                  . "• 요청자: " . $applicantName . "\n"
+                  . "• 입금금액: " . number_format($totalAmount) . "원\n"
+                  . "• 입금계좌: " . $bankName . " " . $accountNumber . " (예금주: " . $accountHolder . ")";
         } else {
-            $title = "🔔 [지출요청 상태 변경 안내]";
+            $title = "🔔 [지출요청 상태 안내]";
             $desc = "• 문서번호: " . $docNo . "\n• 진행상태: " . $st;
         }
 
-        if (!empty($data['applicant_email'])) {
-            sendKakaoNotification($data['applicant_email'], $title, $desc);
+        $applicantTarget = !empty($applicantEmail) ? $applicantEmail : $applicantName;
+        sendKakaoNotification($applicantTarget, $title, $desc);
+    }
+}
+
+// 💬 카카오톡 메시지 실시간 발송 및 토큰 자동 갱신 (중복 토큰 단 1회 발송 방어)
+function sendKakaoNotification($emailOrId, $title, $description, $webUrl = 'https://expense.sjsnr.kr/') {
+    static $sentTokensThisRequest = [];
+
+    $targetKey = strtolower(trim($emailOrId));
+    if (empty($targetKey)) return false;
+
+    $tokenFile = __DIR__ . '/kakao_tokens.json';
+    if (!file_exists($tokenFile)) return false;
+    $tokens = json_decode(file_get_contents($tokenFile), true) ?? [];
+
+    $tokenData = $tokens[$targetKey] ?? null;
+
+    // 소셜 연동 맵핑된 키로 재검색
+    if (!$tokenData) {
+        $linkFile = __DIR__ . '/social_links.json';
+        if (file_exists($linkFile)) {
+            $links = json_decode(file_get_contents($linkFile), true) ?? [];
+            if (!empty($links[$targetKey]['primary_email'])) {
+                $pKey = strtolower($links[$targetKey]['primary_email']);
+                $tokenData = $tokens[$pKey] ?? null;
+            }
         }
     }
+
+    // 이승호님/관리자 계정 토큰 스마트 폴백 매칭
+    if (!$tokenData) {
+        if (strpos($targetKey, 'leesh') !== false || strpos($targetKey, '이승호') !== false) {
+            $tokenData = $tokens['leesh@naver.com'] ?? $tokens['kakao_5035521659'] ?? null;
+        }
+    }
+
+    if (!$tokenData || empty($tokenData['access_token'])) {
+        file_put_contents(__DIR__ . '/kakao_msg_debug.log', sprintf("[%s] NO TOKEN for %s\n", date('Y-m-d H:i:s'), $targetKey), FILE_APPEND);
+        return false;
+    }
+
+    $accessToken = $tokenData['access_token'];
+
+    // 🛑 동일 요청 내 동일 토큰 중복 발송 방어 (Deduplication)
+    $tokenHash = md5($accessToken . '_' . $title);
+    if (isset($sentTokensThisRequest[$tokenHash])) {
+        return true;
+    }
+    $sentTokensThisRequest[$tokenHash] = true;
+
+    // 1. 카카오 기본 텍스트 템플릿 구성
+    $templateObject = [
+        'object_type' => 'text',
+        'text' => $title . "\n\n" . $description,
+        'link' => [
+            'web_url' => $webUrl,
+            'mobile_web_url' => $webUrl
+        ],
+        'button_title' => '스마트 지출요청서 열기'
+    ];
+
+    $sendUrl = "https://kapi.kakao.com/v2/api/talk/memo/default/send";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $sendUrl);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+        'template_object' => json_encode($templateObject, JSON_UNESCAPED_UNICODE)
+    ]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $accessToken,
+        'Content-Type: application/x-www-form-urlencoded;charset=utf-8'
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $resData = json_decode($response, true);
+
+    // 2. 만약 access_token 만료(401) 에러 시 refresh_token으로 자동 갱신 후 재전송!
+    if ($httpCode === 401 && !empty($tokenData['refresh_token'])) {
+        $refreshUrl = "https://kauth.kakao.com/oauth/token";
+        $refreshParams = [
+            'grant_type' => 'refresh_token',
+            'client_id' => 'ce26064239879368e6adaaa9f396dc48',
+            'refresh_token' => $tokenData['refresh_token']
+        ];
+        $rCh = curl_init();
+        curl_setopt($rCh, CURLOPT_URL, $refreshUrl);
+        curl_setopt($rCh, CURLOPT_POST, true);
+        curl_setopt($rCh, CURLOPT_POSTFIELDS, http_build_query($refreshParams));
+        curl_setopt($rCh, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($rCh, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded;charset=utf-8']);
+        curl_setopt($rCh, CURLOPT_SSL_VERIFYPEER, false);
+        $refreshResp = curl_exec($rCh);
+        curl_close($rCh);
+
+        $refreshData = json_decode($refreshResp, true);
+        if (!empty($refreshData['access_token'])) {
+            $accessToken = $refreshData['access_token'];
+            $tokenData['access_token'] = $accessToken;
+            if (!empty($refreshData['refresh_token'])) {
+                $tokenData['refresh_token'] = $refreshData['refresh_token'];
+            }
+            $tokenData['expires_at'] = time() + (int)($refreshData['expires_in'] ?? 21600);
+            $tokenData['updated_at'] = date('Y-m-d H:i:s');
+            $tokens[$targetKey] = $tokenData;
+            file_put_contents($tokenFile, json_encode($tokens, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            // 갱신된 토큰으로 재전송
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $sendUrl);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'template_object' => json_encode($templateObject, JSON_UNESCAPED_UNICODE)
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $accessToken,
+                'Content-Type: application/x-www-form-urlencoded;charset=utf-8'
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            $resData = json_decode($response, true);
+        }
+    }
+
+    $logMsg = sprintf("[%s] Kakao Msg To: %s | Result: %s\n", date('Y-m-d H:i:s'), $targetKey, $response);
+    file_put_contents(__DIR__ . '/kakao_msg_debug.log', $logMsg, FILE_APPEND);
+
+    return ($resData['result_code'] ?? 1) === 0;
 }
 

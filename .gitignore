@@ -1,7 +1,14 @@
 # Git Ignore Rules for churchexpense
 deploy_ftp.ps1
+deploy_ftp.py
+list_ftp.ps1
+list_ftp.py
+check_live_http.py
+verify_live_api.py
 config/db.php
 *.log
 .DS_Store
 Thumbs.db
 node_modules/
+scratch/
+api/test_kakao.php

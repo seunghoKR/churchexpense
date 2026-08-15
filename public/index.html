@@ -11,14 +11,22 @@
 </head>
 <body>
 
-    <!-- 🌿 깔끔하고 맑은 상단 헤더 -->
-    <header class="app-header" style="padding: 10px 14px;">
-        <div style="display:flex; align-items:center;">
-            <img src="images/logo.png" alt="기독교한국침례회 세종새누리교회" style="height:46px; border:none; background:transparent; box-shadow:none; border-radius:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15));">
+    <!-- 🌿 깔끔하고 맑은 상단 헤더 (교회 로고 & 사용자명 👤 & 🔒 로그아웃 - 본문 폭 맞춤 중앙 정렬) -->
+    <header class="app-header">
+        <div class="header-container">
+            <div style="display:flex; align-items:center;">
+                <img src="images/logo.png" alt="기독교한국침례회 세종새누리교회" style="height:44px; border:none; background:transparent; box-shadow:none; border-radius:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15));">
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <button onclick="showTab('mypage')" title="마이페이지 바로가기" style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.35); padding:6px 12px; border-radius:20px; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; backdrop-filter:blur(4px); box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <span id="header-user-name">성도 님</span>
+                    <span id="header-user-avatar" style="font-size:15px;">👤</span>
+                </button>
+                <button onclick="realLogout()" title="로그아웃" style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.35); padding:6px 9px; border-radius:20px; font-size:13.5px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    🔒
+                </button>
+            </div>
         </div>
-        <button onclick="closeOrExit()" style="background:rgba(255,255,255,0.22); color:#fff; border:1px solid rgba(255,255,255,0.5); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">
-            🚪 화면닫기
-        </button>
     </header>
 
     <div class="container">
@@ -40,39 +48,45 @@
             </div>
         </div>
 
-        <!-- 🛠️ 로그인 상태 정보 및 테스트용 툴바 -->
-        <div class="card" id="user-toolbar-card" style="padding: 12px; margin-bottom: 12px; background-color: #f0fdf4; border-color: #bbf7d0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                <div style="word-break:keep-all; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    <strong>👤 현재 접속:</strong> 
-                    <span id="user-name-display" style="color:#047857; font-weight:700;">김성도 집사님</span>
-                    <span id="user-role-badge" style="font-size:13px; color:#6b7280; font-weight:bold;">(요청자)</span>
-                    <span id="user-status-badge" style="font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;">승인 완료</span>
+        <!-- 🌿 따뜻한 AI 오늘의 축복 말씀 카드 -->
+        <div class="card" id="user-toolbar-card" style="padding: 10px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0; box-shadow: 0 1px 3px rgba(16,185,129,0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                    <span style="font-size:16px;">🌿</span>
+                    <div id="ai-greeting-message" style="color:#065f46; font-weight:600; font-size:13.5px; line-height:1.45; word-break:keep-all;">
+                        "선한 일에 헌신하시는 손길 위에 하늘의 위로가 함께합니다! 🌸"
+                    </div>
                 </div>
-                <div id="role-switch-buttons" style="font-size:13px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
-                    <span id="admin-test-mode-buttons" style="display:inline-flex; gap:4px; align-items:center; flex-wrap:wrap;">
-                        <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[요청자 모드]</button>
-                        <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[재정부 모드]</button>
-                        <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[👑 관리자 모드]</button>
+                <div id="role-switch-buttons" style="font-size:12px; display:none; gap:3px; align-items:center;">
+                    <span id="admin-test-mode-buttons" style="display:none; gap:3px; align-items:center;">
+                        <button id="btn-mode-applicant" onclick="switchRoleMode('APPLICANT')" class="btn-role-switch" style="color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:3px 6px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11.5px;">[요청자]</button>
+                        <button id="btn-mode-treasurer" onclick="switchRoleMode('TREASURER')" class="btn-role-switch" style="color:#059669; background:#f0fdf4; border:1px solid #bbf7d0; padding:3px 6px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11.5px;">[재정부]</button>
+                        <button id="btn-mode-admin" onclick="switchRoleMode('ADMIN')" class="btn-role-switch" style="color:#7c3aed; background:#faf5ff; border:1px solid #e9d5ff; padding:3px 6px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11.5px;">[👑 관리자]</button>
                     </span>
-                    <button onclick="realLogout()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">[🔒 로그아웃]</button>
                 </div>
             </div>
         </div>
 
         <!-- 🎯 상단 탭 메뉴 -->
         <div class="tab-group" id="app-tab-group">
+            <!-- 👤 신청자용 메뉴 (2개) -->
             <button class="tab-btn active" id="tab-form-btn" onclick="showTab('form')">📝 요청서 작성</button>
             <button class="tab-btn" id="tab-status-btn" onclick="showTab('status')">📋 진행 현황</button>
+
+            <!-- 💼 재정담당자용 메뉴 (3개) -->
             <button class="tab-btn" id="tab-admin-btn" onclick="showTab('admin')" style="display:none;">📋 지출요청 목록</button>
+            <button class="tab-btn" id="tab-batch-btn" onclick="toggleBatchMode()" style="display:none; color:#2563eb; border-color:#93c5fd; font-weight:700;">💸 집행완료 확정</button>
+            <button class="tab-btn" id="tab-print-btn" onclick="printFullReport()" style="display:none; color:#1e293b; border-color:#cbd5e1; font-weight:700;">🖨️ 인쇄</button>
+
+            <!-- 👑 사이트 관리자용 메뉴 -->
             <button class="tab-btn" id="tab-site-admin-btn" onclick="showTab('site_admin')" style="display:none; border-color:#7c3aed; color:#7c3aed;">👑 관리자</button>
-            <button class="tab-btn" id="tab-mypage-btn" onclick="showTab('mypage')" style="border-color:#a7f3d0;">👤 마이페이지</button>
+            <button class="tab-btn" id="tab-mypage-btn" onclick="showTab('mypage')" style="display:none; border-color:#a7f3d0;">👤 마이페이지</button>
         </div>
 
-        <!-- 1. 지출요청서 작성 Section -->
+        <!-- 1. 지출요청서 작성 Section (원페이지 통합 모드 기본) -->
         <div id="section-form">
             <div id="wizard-form-container">
-                <div class="wizard-stepper" id="main-wizard-stepper">
+                <div class="wizard-stepper" id="main-wizard-stepper" style="display:none;">
                     <div class="stepper-step active" id="st-step-1">
                         <div class="stepper-num" id="st-num-1">1</div>
                         <div class="stepper-label">부서 & 목적</div>
@@ -105,7 +119,7 @@
                             <label>지출목적 <span class="required">*</span></label>
                             <input type="text" id="w-purpose-input" class="form-control" placeholder="예: 청년부 여름 수련회 물품 구매" style="font-size:15px; padding:11px;">
                         </div>
-                        <div class="wizard-btn-group wizard-only-btn">
+                        <div class="wizard-btn-group wizard-only-btn" style="display:none;">
                             <button type="button" class="btn-wizard-next" onclick="goToWizardStep(2)">
                                 다음 (지출내역) ➔
                             </button>
@@ -113,7 +127,7 @@
                     </div>
 
                     <!-- Step 2: 지출 내역 -->
-                    <div id="w-step-2-panel" class="card" style="display:none;">
+                    <div id="w-step-2-panel" class="card" style="display:block;">
                         <div class="card-title">💵 2단계: 지출 세부 내역 및 비용 입력</div>
                         <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
                             항목과 금액, 비고를 2줄 카드로 넓고 편리하게 입력하세요.
@@ -159,7 +173,7 @@
                     </div>
 
                     <!-- Step 3: 계좌 및 영수증 -->
-                    <div id="w-step-3-panel" class="card" style="display:none;">
+                    <div id="w-step-3-panel" class="card" style="display:block;">
                         <div class="card-title">💳 3단계: 입금 계좌 & 영수증 첨부</div>
                         <div style="display:grid; grid-template-columns: 1.2fr 1.8fr 1fr; gap: 6px; margin-bottom:12px;">
                             <div class="form-group">
@@ -209,7 +223,7 @@
                             <div id="receipt-preview-container" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
                         </div>
 
-                        <div class="wizard-btn-group wizard-only-btn">
+                        <div class="wizard-btn-group wizard-only-btn" style="display:none;">
                             <button type="button" class="btn-wizard-prev" onclick="goToWizardStep(2)">⬅ 이전</button>
                             <button type="submit" class="btn-wizard-next" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); font-size:17px;">
                                 ✉️ 요청서 제출
@@ -217,7 +231,7 @@
                         </div>
                     </div>
 
-                    <div id="onepage-submit-container" style="display:none; margin-top:14px;">
+                    <div id="onepage-submit-container" style="display:block; margin-top:14px;">
                         <button type="submit" class="btn-primary-lg" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); font-size:18px; padding:16px;">
                             ✉️ 요청서 제출
                         </button>
@@ -259,15 +273,37 @@
                 </div>
             </div>
 
-            <div class="card" style="border-top:3px solid var(--primary-color);">
-                <div class="card-title" style="color:var(--primary-color);">👤 내 프로필 & 연락처</div>
-                <div class="form-group">
-                    <label style="font-weight:700;">성명 (SNS 로그인 성명 연동)</label>
-                    <input type="text" id="my-name-input" class="form-control" placeholder="성함 입력 (예: 김성도)" oninput="syncNameWithHolder(this.value)">
+            <div class="card" style="border-top:3.5px solid var(--primary-color);">
+                <div class="card-title" style="color:var(--primary-color); justify-content:space-between; align-items:center;">
+                    <span>👤 내 프로필 & 나만의 이모티콘</span>
+                    <button type="button" id="current-avatar-btn" onclick="toggleAvatarPicker()" style="background:#f0fdf4; border:1.5px solid #059669; padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 1px 3px rgba(5,150,105,0.15); transition:all 0.2s;">
+                        <span id="current-avatar-preview" style="font-size:20px;">👤</span>
+                        <span id="avatar-toggle-text" style="font-size:12px; color:#047857; font-weight:700;">이모티콘 변경 ▾</span>
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label style="font-weight:700;">주로 사용하는 이메일 (연락 및 승인 알림 수신용)</label>
-                    <input type="email" id="my-email-input" class="form-control" placeholder="이메일 주소 입력 (예: user@example.com)">
+
+                <!-- 🎨 귀여운 남녀노소 이모티콘 선택기 (기본 접힘, 클릭 시 펼쳐짐!) -->
+                <div id="avatar-picker-container" style="display:none; margin-bottom:14px; background:#f8fafc; padding:12px 14px; border-radius:12px; border:1.5px solid #bbf7d0; box-shadow:0 2px 8px rgba(0,0,0,0.05); animation: fadeIn 0.2s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <label style="font-weight:700; font-size:13px; color:#334155; margin:0;">
+                            🎨 마음에 드는 이모티콘을 콕 눌러주세요!
+                        </label>
+                        <button type="button" onclick="toggleAvatarPicker(false)" style="background:none; border:none; color:#64748b; font-size:12px; font-weight:bold; cursor:pointer;">✕ 닫기</button>
+                    </div>
+                    <div id="avatar-emoji-grid" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-start;">
+                        <!-- JS initAvatarPicker()에 의해 동적으로 귀여운 이모티콘 버튼들이 렌더링됩니다 -->
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1.6fr; gap:10px; margin-bottom:12px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="font-weight:700; font-size:13.5px;">이름</label>
+                        <input type="text" id="my-name-input" class="form-control" placeholder="성함 입력 (예: 김성도)" oninput="syncNameWithHolder(this.value)">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="font-weight:700; font-size:13.5px;">이메일 (로그인 계정)</label>
+                        <input type="email" id="my-email-input" class="form-control" readonly style="background:#f1f5f9; color:#475569; font-weight:600; cursor:not-allowed;" title="로그인한 소셜 계정의 고유 이메일입니다.">
+                    </div>
                 </div>
             </div>
 
@@ -311,27 +347,7 @@
                 </button>
             </div>
 
-            <!-- ✈️ 텔레그램 실시간 알림 연동 카드 -->
-            <div class="card" style="border-top:3.5px solid #0088cc; background:#f0f9ff; border-color:#bae6fd; margin-top:14px;">
-                <div class="card-title" style="color:#0369a1; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                    <span>✈️ 텔레그램 실시간 1초 알림 연동</span>
-                    <button type="button" onclick="openTelegramGuideModal()" style="background:#0088cc; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
-                        ❓ 텔레그램 Chat ID 확인방법
-                    </button>
-                </div>
-                <p style="font-size:13px; color:#0369a1; margin-bottom:10px; line-height:1.4;">
-                    텔레그램 Chat ID를 등록하시면 지출요청 심사 결과(승인/반려)를 스마트폰 텔레그램 메시지로 1초 만에 무료 수신하실 수 있습니다.
-                </p>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="font-weight:700; font-size:13px; color:#0369a1; margin-bottom:4px; display:block;">텔레그램 Chat ID (숫자 번호)</label>
-                    <div style="display:flex; gap:6px;">
-                        <input type="text" id="my-telegram-input" class="form-control" placeholder="예: 123456789 (확인방법 버튼 참고)" style="font-size:14px; padding:9px;">
-                        <button type="button" onclick="saveTelegramId()" style="background:#0088cc; color:#fff; border:none; padding:9px 14px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;">
-                            💾 저장
-                        </button>
-                    </div>
-                </div>
-            </div>
+
 
 
 
@@ -353,17 +369,8 @@
         <div id="section-admin" style="display:none;">
 
             <div class="card">
-                <!-- 🔘 상단 2대 핵심 버튼 -->
-                <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+                <div class="card-title" style="margin-bottom:14px;">
                     <span>📋 지출요청 심사 & 집행 목록</span>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button type="button" class="btn-secondary-sm" style="background:#1e293b; color:#ffffff; padding:7px 12px; font-size:13px; font-weight:bold; cursor:pointer;" onclick="printFullReport()">
-                            🖨️ 전체 목록 인쇄
-                        </button>
-                        <button type="button" id="btn-toggle-batch-mode" class="btn-secondary-sm" style="background:#2563eb; color:#ffffff; padding:7px 12px; font-size:13px; font-weight:bold; cursor:pointer;" onclick="toggleBatchMode()">
-                            💸 집행완료 확정
-                        </button>
-                    </div>
                 </div>
 
                 <!-- 💸 스마트 집행완료 확정 툴바 (토글 시 등장!) -->
@@ -415,16 +422,7 @@
         <!-- 5. 👑 사이트 관리자 전용 3대 대시보드 Section -->
         <div id="section-site_admin" style="display:none;">
 
-            <!-- 🔔 승인 요청 목록 카드 -->
-            <div class="card" style="border-top:3.5px solid #7c3aed; background:#faf5ff; border-color:#e9d5ff; margin-bottom:14px;">
-                <div class="card-title" style="color:#6b21a8; justify-content:space-between;">
-                    <span>🔔 승인 요청 목록</span>
-                    <span id="admin-notif-count" style="font-size:12px; background:#7c3aed; color:#fff; padding:2px 8px; border-radius:10px; font-weight:bold;">0 건</span>
-                </div>
-                <div id="admin-notif-list" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                    <div style="font-size:13px; color:#64748b; padding:6px; text-align:center;">도착한 회원 승인 알림이 없습니다.</div>
-                </div>
-            </div>
+
 
             <!-- 🏢 1. 부서 생성/수정/삭제 관리 -->
             <div class="card" style="border-top:3.5px solid #7c3aed;">
@@ -476,18 +474,18 @@
                     소셜 로그인으로 접속한 신규 성도님들의 승인 대기 목록입니다. [✅ 회원 승인]을 누르시면 지출요청서 작성이 정회원으로 즉시 승인됩니다.
                 </p>
 
-                <div class="table-responsive">
-                    <table class="status-table" style="background:#ffffff; border-radius:8px;">
+                <div class="table-responsive" style="width:100%; overflow-x:auto;">
+                    <table class="admin-user-table" style="width:100%; min-width:100%; background:#ffffff; border-radius:8px; border:1px solid #e9d5ff; border-collapse:collapse;">
                         <thead>
-                            <tr>
-                                <th>성명 / 이메일</th>
-                                <th>가입 시각</th>
-                                <th>승인 처리</th>
+                            <tr style="background:#f3e8ff;">
+                                <th style="width:45%; text-align:left; padding:10px 12px; color:#581c87;">성명 / 이메일</th>
+                                <th style="width:25%; text-align:center; padding:10px 8px; color:#581c87;">가입 시각</th>
+                                <th style="width:30%; text-align:center; padding:10px 8px; color:#581c87;">승인 처리</th>
                             </tr>
                         </thead>
                         <tbody id="server-pending-users-table-body">
                             <tr>
-                                <td colspan="3" style="text-align:center; color:#64748b; padding:12px;">
+                                <td colspan="3" style="text-align:center; color:#64748b; padding:16px;">
                                     서버에서 승인 대기 목록을 불러오는 중입니다...
                                 </td>
                             </tr>
@@ -508,21 +506,25 @@
                     승인 완료된 전체 교인 회원의 시스템 권한(신청자 / 재정부 / 사이트 관리자)을 1초 만에 관리합니다.
                 </p>
 
-                <table class="admin-user-table">
-                    <thead>
-                        <tr>
-                            <th style="width:40%;">성명 / 이메일</th>
-                            <th style="width:60%;">권한 설정 / 관리</th>
-                        </tr>
-                    </thead>
-                    <tbody id="server-approved-users-table-body">
-                        <tr>
-                            <td colspan="2" style="text-align:center; color:#64748b; padding:14px;">
-                                서버에서 승인 완료된 회원 목록을 불러오는 중입니다...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive" style="width:100%; overflow-x:auto;">
+                    <table class="admin-user-table" style="width:100%; min-width:100%; background:#ffffff; border-radius:8px; border:1px solid #cbd5e1; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f8fafc;">
+                                <th style="width:24%; text-align:left; padding:10px 12px; color:#334155;">성명</th>
+                                <th style="width:42%; text-align:left; padding:10px 8px; color:#334155;">이메일</th>
+                                <th style="width:20%; text-align:center; padding:10px 6px; color:#334155;">권한 설정</th>
+                                <th style="width:14%; text-align:center; padding:10px 6px; color:#334155;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="server-approved-users-table-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center; color:#64748b; padding:16px;">
+                                    서버에서 승인 완료된 회원 목록을 불러오는 중입니다...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -567,8 +569,18 @@
                 </div>
             </div>
 
-            <!-- 🔘 승인 / 반려 버튼 구획 -->
-            <div id="m-action-btn-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <!-- 👤 신청자 전용 하단 현재 상태 뱃지 및 닫기 버튼 -->
+            <div id="m-applicant-bottom-group" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                <div id="m-applicant-status-btn" style="text-align:center; padding:12px 14px; border-radius:8px; font-weight:800; font-size:15px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                    <!-- JS에서 현재 상태(예: 👍 승인 완료 (집행 대기))가 큼직하게 렌더링됩니다 -->
+                </div>
+                <button type="button" class="btn-primary-lg" style="background:#475569; font-size:14.5px; padding:11px;" onclick="closeModal()">
+                    닫기
+                </button>
+            </div>
+
+            <!-- 🔘 재정부/관리자 전용 승인 / 반려 버튼 구획 -->
+            <div id="m-action-btn-group" style="display:none; grid-template-columns: 1fr 1fr; gap:10px;">
                 <button type="button" class="btn-primary-lg" style="background:#ef4444; font-size:15px; padding:12px; font-weight:800;" onclick="processApproval('REJECTED')">
                     ❌ 반려 처리
                 </button>
@@ -577,7 +589,7 @@
                 </button>
             </div>
 
-            <!-- 집행 완료건 전용 닫기 버튼 -->
+            <!-- 재정부/관리자 집행 완료건 전용 닫기 버튼 -->
             <div id="m-close-only-group" style="display:none; margin-top:10px;">
                 <button type="button" class="btn-primary-lg" style="background:#475569; font-size:15px; padding:12px;" onclick="closeModal()">
                     🚪 닫기
@@ -621,6 +633,18 @@
         </div>
     </div>
 
+    <!-- 🔔 세종새누리교회 감성 커스텀 알림 모달 (화면 중앙 알맞은 위치) -->
+    <div id="custom-app-alert-modal" class="modal-backdrop" style="z-index:99999; display:none; justify-content:center; align-items:center; background:rgba(15,23,42,0.55); backdrop-filter:blur(3px);">
+        <div class="modal-content" style="max-width:410px; text-align:center; padding:22px 20px; border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.25); border:1.5px solid #e2e8f0;">
+            <div id="custom-alert-icon" style="font-size:36px; margin-bottom:6px;">⏳</div>
+            <h3 id="custom-alert-title" style="font-size:16.5px; font-weight:800; color:#0f172a; margin-bottom:12px;">안내</h3>
+            <div id="custom-alert-body" style="font-size:13.5px; color:#334155; line-height:1.6; margin-bottom:18px; white-space:pre-line; text-align:left; background:#f8fafc; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0;"></div>
+            <button type="button" class="btn-primary-lg" onclick="closeAppAlert()" style="padding:10px 24px; font-size:14px; font-weight:700; border-radius:8px; width:100%;">
+                확인
+            </button>
+        </div>
+    </div>
+
     <!-- 🖨️ 재정부 지출요청 총괄집계표 전용 인쇄/PDF 숨김 구획 -->
     <div id="print-report-container"></div>
 
@@ -631,18 +655,6 @@
         let activeReqId = null;
         let activeReqStatus = null;
         let isBatchModeActive = false;
-
-        function showTab(tabName) {
-            ['form', 'status', 'admin', 'site_admin', 'mypage'].forEach(t => {
-                const sec = document.getElementById('section-' + t);
-                const btn = document.getElementById('tab-' + t + '-btn');
-                if (sec) sec.style.display = (t === tabName) ? 'block' : 'none';
-                if (btn) {
-                    if (t === tabName) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
-            });
-        }
 
         // 🏢 사역 부서 전역 동기화 렌더링 시스템 (요청서 1단계, 마이페이지, 사이트 관리자 태그 관리 100% 일괄 반영)
         const DEFAULT_DEPARTMENTS = ['교육-청소년', '교육-유치', '교육-초등', '교육-청년', '교육-장년', '선교-해외', '선교-국내', '예배-찬양'];
@@ -846,23 +858,26 @@
 
             const bar = document.getElementById('batch-action-bar');
             const chks = document.querySelectorAll('.chk-item-batch');
-            const toggleBtn = document.getElementById('btn-toggle-batch-mode');
+            const tabBatchBtn = document.getElementById('tab-batch-btn');
 
             if (isBatchModeActive) {
                 if (bar) bar.classList.add('active');
                 chks.forEach(c => c.classList.add('active'));
-                if (toggleBtn) {
-                    toggleBtn.style.background = '#475569';
-                    toggleBtn.textContent = '❌ 확정 모드 닫기';
+                if (tabBatchBtn) {
+                    tabBatchBtn.style.background = '#2563eb';
+                    tabBatchBtn.style.color = '#ffffff';
+                    tabBatchBtn.textContent = '❌ 확정 닫기';
                 }
             } else {
                 if (bar) bar.classList.remove('active');
                 chks.forEach(c => c.classList.remove('active'));
-                if (toggleBtn) {
-                    toggleBtn.style.background = '#2563eb';
-                    toggleBtn.textContent = '💸 집행완료 확정';
+                if (tabBatchBtn) {
+                    tabBatchBtn.style.background = '';
+                    tabBatchBtn.style.color = '#2563eb';
+                    tabBatchBtn.textContent = '💸 집행완료 확정';
                 }
-                document.getElementById('chk-select-all').checked = false;
+                const chkAll = document.getElementById('chk-select-all');
+                if (chkAll) chkAll.checked = false;
                 toggleSelectAll({ checked: false });
             }
         }
@@ -940,23 +955,53 @@
                 stBadge.textContent = getStatusLabel(req.status);
             }
 
+            const applicantBottomGroup = document.getElementById('m-applicant-bottom-group');
+            const applicantStatusBtn = document.getElementById('m-applicant-status-btn');
             const actionGroup = document.getElementById('m-action-btn-group');
             const closeGroup = document.getElementById('m-close-only-group');
             const memoGroup = document.getElementById('m-memo-group');
 
-            if (req.status === 'PAID' || req.status === 'REJECTED') {
-                if (actionGroup) actionGroup.style.display = 'none';
-                if (closeGroup) closeGroup.style.display = 'block';
-                if (memoGroup) {
-                    memoGroup.style.display = 'block';
-                    if (memoInput) memoInput.disabled = true;
+            const isTreasurerOrAdmin = ['ADMIN', 'TREASURER'].includes(currentRole);
+
+            // 🎯 상태 뱃지 버튼 텍스트 & 스타일 세팅
+            if (applicantStatusBtn) {
+                if (req.status === 'PAID') {
+                    applicantStatusBtn.style.cssText = 'text-align:center; padding:12px 14px; border-radius:8px; font-weight:800; font-size:15.5px; background:#dcfce7; color:#15803d; border:1.5px solid #86efac; box-shadow:0 1px 3px rgba(0,0,0,0.08);';
+                    applicantStatusBtn.innerHTML = '✅ 집행 완료 (계좌 입금 완료)';
+                } else if (req.status === 'APPROVED') {
+                    applicantStatusBtn.style.cssText = 'text-align:center; padding:12px 14px; border-radius:8px; font-weight:800; font-size:15.5px; background:#dbeafe; color:#1e40af; border:1.5px solid #93c5fd; box-shadow:0 1px 3px rgba(0,0,0,0.08);';
+                    applicantStatusBtn.innerHTML = '👍 지출 승인 완료 (집행 대기)';
+                } else if (req.status === 'REJECTED') {
+                    applicantStatusBtn.style.cssText = 'text-align:center; padding:12px 14px; border-radius:8px; font-weight:800; font-size:15.5px; background:#fee2e2; color:#b91c1c; border:1.5px solid #fca5a5; box-shadow:0 1px 3px rgba(0,0,0,0.08);';
+                    applicantStatusBtn.innerHTML = '❌ 반려 처리됨';
+                } else {
+                    applicantStatusBtn.style.cssText = 'text-align:center; padding:12px 14px; border-radius:8px; font-weight:800; font-size:15.5px; background:#fef3c7; color:#b45309; border:1.5px solid #fde68a; box-shadow:0 1px 3px rgba(0,0,0,0.08);';
+                    applicantStatusBtn.innerHTML = '⏳ 재정부 심사 대기 중';
                 }
-            } else {
+            }
+
+            // 🎯 오직 [재정부/관리자] 이면서 [PENDING(심사대기)] 건일 때만 반려/승인 버튼 노출!
+            if (isTreasurerOrAdmin && req.status === 'PENDING') {
                 if (actionGroup) actionGroup.style.display = 'grid';
                 if (closeGroup) closeGroup.style.display = 'none';
+                if (applicantBottomGroup) applicantBottomGroup.style.display = 'none';
                 if (memoGroup) {
                     memoGroup.style.display = 'block';
                     if (memoInput) memoInput.disabled = false;
+                }
+            } else {
+                // 이미 승인 완료(APPROVED), 집행 완료(PAID), 반려(REJECTED)되었거나 일반 신청자일 때:
+                if (actionGroup) actionGroup.style.display = 'none';
+                if (closeGroup) closeGroup.style.display = 'none';
+                if (applicantBottomGroup) applicantBottomGroup.style.display = 'flex'; // 하단 상태 뱃지 + 닫기 버튼!
+
+                if (memoGroup) {
+                    if (req.reject_reason) {
+                        memoGroup.style.display = 'block';
+                        if (memoInput) memoInput.disabled = true;
+                    } else {
+                        memoGroup.style.display = 'none';
+                    }
                 }
             }
 
@@ -1021,14 +1066,30 @@
                     const applicantName = document.getElementById('m-applicant-text')?.textContent || '';
                     const notifMsg = `🔔 [지출요청 심사결과] 요청하신 지출요청서(${activeReqId})가 [${statusLabel}]되었습니다.` + (memo ? ` (의견/사유: ${memo})` : '');
                     
-                    // 요청자에게 알림 저장
                     addNotification('APPLICANT', notifMsg);
+
+                    // 1. 메모리 상의 항목 상태 즉시 변경
+                    const targetItem = currentAllExpenseRequests.find(r => (r.doc_no || ('' + r.id)) === ('' + activeReqId));
+                    if (targetItem) {
+                        targetItem.status = targetStatus;
+                        if (memo) targetItem.reject_reason = memo;
+                    }
+                    renderAdminRequestsList(currentAllExpenseRequests);
+                    renderMyStatusList(currentAllExpenseRequests);
 
                     alert(`🎉 [${activeReqId}] 지출요청건이 [${statusLabel}] 처리되었습니다.`);
                     closeModal();
                     fetchExpenseRequestsFromServer();
                 })
                 .catch(err => {
+                    const targetItem = currentAllExpenseRequests.find(r => (r.doc_no || ('' + r.id)) === ('' + activeReqId));
+                    if (targetItem) {
+                        targetItem.status = targetStatus;
+                        if (memo) targetItem.reject_reason = memo;
+                    }
+                    renderAdminRequestsList(currentAllExpenseRequests);
+                    renderMyStatusList(currentAllExpenseRequests);
+
                     alert(`🎉 [${activeReqId}] 지출요청건이 [${statusLabel}] 처리되었습니다.`);
                     closeModal();
                     fetchExpenseRequestsFromServer();
@@ -1078,20 +1139,23 @@
                     formData.append('action', 'update_status');
                     formData.append('doc_no', docNo);
                     formData.append('status', 'PAID');
-                    return fetch('../api/request_action.php', { method: 'POST', body: formData })
+                    return fetch('api/request_action.php', { method: 'POST', body: formData })
                         .then(res => res.json())
                         .catch(err => null);
                 });
 
                 Promise.all(promises).then(() => {
+                    // 1. 클라이언트 캐시 목록 상태 즉시 업데이트
                     reqIds.forEach(id => {
-                        const badge = document.getElementById('badge-' + id);
-                        if (badge) {
-                            badge.className = 'status-badge status-PAID';
-                            badge.style.cssText = 'background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px; pointer-events:none;';
-                            badge.textContent = '✅ 집행 완료';
+                        const targetItem = currentAllExpenseRequests.find(r => (r.doc_no || ('' + r.id)) === ('' + id));
+                        if (targetItem) {
+                            targetItem.status = 'PAID';
                         }
                     });
+
+                    // 2. 관리자 및 신청자 목록 즉각 리렌더링
+                    renderAdminRequestsList(currentAllExpenseRequests);
+                    renderMyStatusList(currentAllExpenseRequests);
 
                     alert('🎉 [일괄 집행 완료 처리 완료!]\n\n' +
                           '• 선택 건수: 총 ' + items.length + '건\n' +
@@ -1099,7 +1163,7 @@
                           '인터넷 뱅킹 환급 집행 및 요청자 카카오톡 알림이 정상 발송되었습니다!');
 
                     toggleBatchMode(false);
-                    fetchRequestsFromServer();
+                    fetchExpenseRequestsFromServer();
                 });
             }
         }
@@ -1275,6 +1339,23 @@
             formData.append('items', JSON.stringify(items));
             formData.append('ajax', '1');
 
+            // 🖼️ 첨부 영수증 / 증빙 사진 파일 전송 (1. 파일 multipart + 2. Base64 fallback 이중 전송)
+            if (typeof selectedReceiptFiles !== 'undefined' && selectedReceiptFiles.length > 0) {
+                selectedReceiptFiles.forEach(file => {
+                    formData.append('receipt_files[]', file);
+                });
+            } else {
+                const rInput = document.getElementById('receipt-input-w');
+                if (rInput && rInput.files && rInput.files.length > 0) {
+                    Array.from(rInput.files).forEach(file => {
+                        formData.append('receipt_files[]', file);
+                    });
+                }
+            }
+            if (typeof selectedReceiptBase64 !== 'undefined' && selectedReceiptBase64.length > 0) {
+                formData.append('receipt_images', JSON.stringify(selectedReceiptBase64));
+            }
+
             fetch('api/request_action.php', { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(resData => {
@@ -1312,6 +1393,21 @@
         function resetExpenseForm() {
             const purposeInput = document.getElementById('w-purpose-input');
             if (purposeInput) purposeInput.value = '';
+
+            // 영수증 첨부 파일 초기화
+            if (typeof selectedReceiptFiles !== 'undefined') {
+                selectedReceiptFiles = [];
+            }
+            if (typeof selectedReceiptBase64 !== 'undefined') {
+                selectedReceiptBase64 = [];
+            }
+            const rPreview = document.getElementById('receipt-preview-container');
+            if (rPreview) rPreview.innerHTML = '';
+            const rInput = document.getElementById('receipt-input-w');
+            if (rInput) rInput.value = '';
+
+            // 계좌 정보 마이페이지 기본값으로 자동 재동기화!
+            syncAccountToForm();
 
             const cardList = document.getElementById('w-items-card-list');
             if (cardList) {
@@ -1418,21 +1514,294 @@
             document.getElementById('w-total-amount-display').textContent = total.toLocaleString() + ' 원';
         }
 
-        function handleReceiptPreview(input) {
-            const container = document.getElementById('receipt-preview-container');
-            container.innerHTML = '';
-            if (input.files) {
-                Array.from(input.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.cssText = 'width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;';
-                        container.appendChild(img);
-                    }
-                    reader.readAsDataURL(file);
-                });
+        // 💳 마이페이지에 저장된 기본 계좌 정보를 요청서 작성 폼에 즉시 자동 반영
+        function syncAccountToForm() {
+            const savedBank = localStorage.getItem('saenuri_default_bank') || '';
+            const savedAccount = localStorage.getItem('saenuri_default_account') || '';
+            const savedHolder = localStorage.getItem('saenuri_default_holder') || localStorage.getItem('saenuri_user_name') || '';
+
+            if (savedBank) {
+                setBankSelectValue('form-bank-select', 'form-bank-direct-input', savedBank);
             }
+            const formAccInput = document.getElementById('form-account-input');
+            if (formAccInput && savedAccount) {
+                formAccInput.value = savedAccount;
+            }
+            const formHldInput = document.getElementById('form-holder-input');
+            if (formHldInput && savedHolder) {
+                formHldInput.value = savedHolder;
+            }
+        }
+
+        // 📸 스마트폰 고화질 사진(10MB+)을 300~600KB로 자동 리사이징 & 압축하는 도우미 함수
+        async function compressImageFile(file, maxWidth = 1600, maxHeight = 1600, quality = 0.82) {
+            return new Promise((resolve) => {
+                if (!file.type || !file.type.startsWith('image/')) {
+                    resolve({ file: file, dataUrl: '' });
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth || height > maxHeight) {
+                            if (width > height) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            } else {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        canvas.toBlob((blob) => {
+                            if (!blob) {
+                                resolve({ file: file, dataUrl: e.target.result });
+                                return;
+                            }
+                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve({ file: compressedFile, dataUrl: dataUrl });
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = () => resolve({ file: file, dataUrl: e.target.result });
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => resolve({ file: file, dataUrl: '' });
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 🖼️ 영수증 다중 파일 첨부 상태 관리 및 미리보기/삭제 로직 (스마트폰 자동 압축 & Base64 백업)
+        let selectedReceiptFiles = [];
+        let selectedReceiptBase64 = [];
+
+        async function handleReceiptPreview(input) {
+            if (!input.files || input.files.length === 0) return;
+            const newFiles = Array.from(input.files);
+
+            const container = document.getElementById('receipt-preview-container');
+            const loadingMsg = document.createElement('div');
+            loadingMsg.id = 'receipt-loading-indicator';
+            loadingMsg.style.cssText = 'font-size:12px; color:#059669; font-weight:bold; padding:6px;';
+            loadingMsg.textContent = '⏳ 스마트폰 사진 최적화 압축 중...';
+            if (container) container.appendChild(loadingMsg);
+
+            for (const f of newFiles) {
+                if (selectedReceiptFiles.length < 10) {
+                    const res = await compressImageFile(f);
+                    selectedReceiptFiles.push(res.file);
+                    if (res.dataUrl) selectedReceiptBase64.push(res.dataUrl);
+                }
+            }
+            input.value = ''; // 동일 파일 재선택 허용
+            renderReceiptPreviews();
+        }
+
+        function removeReceiptFile(idx) {
+            if (idx >= 0 && idx < selectedReceiptFiles.length) {
+                selectedReceiptFiles.splice(idx, 1);
+                if (selectedReceiptBase64.length > idx) {
+                    selectedReceiptBase64.splice(idx, 1);
+                }
+                renderReceiptPreviews();
+            }
+        }
+
+        function renderReceiptPreviews() {
+            const container = document.getElementById('receipt-preview-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (selectedReceiptFiles.length === 0) {
+                return;
+            }
+
+            selectedReceiptFiles.forEach((file, index) => {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative; display:inline-block; margin:4px; vertical-align:top;';
+
+                const img = document.createElement('img');
+                const srcUrl = (selectedReceiptBase64[index]) ? selectedReceiptBase64[index] : URL.createObjectURL(file);
+                img.src = srcUrl;
+                img.alt = '영수증 미리보기 #' + (index + 1);
+                img.title = '터치/클릭 시 확대 보기';
+                img.style.cssText = 'width:76px; height:76px; object-fit:cover; border-radius:8px; border:2px solid #059669; box-shadow:0 2px 5px rgba(0,0,0,0.12); cursor:pointer; display:block;';
+                img.onclick = function() {
+                    if (typeof openImageZoomModal === 'function') openImageZoomModal(srcUrl);
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.innerHTML = '&times;';
+                delBtn.title = '이 사진 첨부 취소';
+                delBtn.style.cssText = 'position:absolute; top:-7px; right:-7px; background:#ef4444; color:#ffffff; border:1.5px solid #ffffff; border-radius:50%; width:22px; height:22px; font-size:15px; line-height:1; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3); z-index:2;';
+                delBtn.onclick = function(ev) {
+                    ev.stopPropagation();
+                    removeReceiptFile(index);
+                };
+
+                wrap.appendChild(img);
+                wrap.appendChild(delBtn);
+                container.appendChild(wrap);
+            });
+        }
+
+        // 🌿 따뜻하고 은혜로운 AI 맞춤형 축복 인사말 생성기
+        function getAiBlessingGreeting(userName) {
+            const now = new Date();
+            const hour = now.getHours();
+            const day = now.getDay(); // 0: 일요일
+
+            const sundayGreetings = [
+                `"은혜와 기쁨이 넘치는 복된 주일 되세요! ⛪✨"`,
+                `"주님 안에서 평안과 쉼을 누리는 거룩한 주일 되세요! 🌿"`,
+                `"오늘 예배를 통해 풍성한 하늘의 은혜가 가득하시길 기도합니다! 🕊️"`
+            ];
+
+            const morningGreetings = [
+                `"주님의 새로운 은혜로 시작하는 활기찬 아침 되세요! 🌅"`,
+                `"오늘 하루도 주님께서 당신의 발걸음을 선하게 인도하십니다! 🌿"`,
+                `"새 아침, 주님의 평강과 사랑이 가득하시길 축복합니다! ☕✨"`
+            ];
+
+            const afternoonGreetings = [
+                `"오늘도 주님의 은혜 안에서 평안하고 기쁜 하루 되세요! 🌿"`,
+                `"빛과 소금으로 수고하시는 모든 사역을 주님이 축복하십니다! ✨"`,
+                `"주 안에서 늘 감사와 찬양이 넘치는 복된 오후 되세요! 💖"`,
+                `"선한 일에 헌신하시는 손길 위에 하늘의 위로가 함께합니다! 🌸"`
+            ];
+
+            const eveningGreetings = [
+                `"오늘 하루도 참 수고 많으셨습니다. 평안한 밤 되세요! 🌙"`,
+                `"주님의 따뜻한 품 안에서 쉼과 회복을 누리는 저녁 되세요! ✨"`,
+                `"감사와 은혜로 하루를 마무리하시길 축복합니다! 🕊️"`
+            ];
+
+            let pool = afternoonGreetings;
+            if (day === 0) {
+                pool = sundayGreetings;
+            } else if (hour >= 5 && hour < 12) {
+                pool = morningGreetings;
+            } else if (hour >= 18 || hour < 5) {
+                pool = eveningGreetings;
+            }
+
+            const randIdx = Math.floor(Math.random() * pool.length);
+            return pool[randIdx];
+        }
+
+        // 🎨 귀여운 남녀노소 프로필 이모티콘 아바타 목록
+        const AVATAR_EMOJIS = [
+            '👤', '👨', '👩', '🧑', '👦', '👧', '🧒', '👶', 
+            '🙋‍♂️', '🙋‍♀️', '🧑‍💼', '👩‍💼', '🧔', '👱‍♀️', '👨‍🦰', '👩‍🦰', 
+            '👨‍🦳', '👵', '👴', '🧑‍🏫', '🧑‍🎓', '😇', '🕊️', '🌿', '💖', '✝️'
+        ];
+
+        let selectedUserAvatar = localStorage.getItem('saenuri_user_avatar') || '👤';
+
+        function initAvatarPicker() {
+            const grid = document.getElementById('avatar-emoji-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            selectedUserAvatar = localStorage.getItem('saenuri_user_avatar') || '👤';
+
+            AVATAR_EMOJIS.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'avatar-emoji-btn';
+                btn.dataset.emoji = emoji;
+                btn.textContent = emoji;
+                btn.style.cssText = `
+                    font-size: 21px;
+                    width: 42px;
+                    height: 42px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 10px;
+                    border: ${emoji === selectedUserAvatar ? '2.5px solid #059669' : '1px solid #cbd5e1'};
+                    background: ${emoji === selectedUserAvatar ? '#dcfce7' : '#ffffff'};
+                    transform: ${emoji === selectedUserAvatar ? 'scale(1.12)' : 'scale(1)'};
+                    box-shadow: ${emoji === selectedUserAvatar ? '0 2px 6px rgba(5,150,105,0.25)' : '0 1px 2px rgba(0,0,0,0.05)'};
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                `;
+                btn.onclick = () => selectUserAvatar(emoji);
+                grid.appendChild(btn);
+            });
+
+            updateAvatarDisplay(selectedUserAvatar);
+        }
+
+        function toggleAvatarPicker(forceState) {
+            const container = document.getElementById('avatar-picker-container');
+            const toggleText = document.getElementById('avatar-toggle-text');
+            if (!container) return;
+            const isCurrentlyOpen = container.style.display !== 'none';
+            const shouldOpen = (forceState !== undefined) ? forceState : !isCurrentlyOpen;
+            container.style.display = shouldOpen ? 'block' : 'none';
+            if (toggleText) {
+                toggleText.textContent = shouldOpen ? '이모티콘 닫기 ▴' : '이모티콘 변경 ▾';
+            }
+        }
+
+        function selectUserAvatar(emoji) {
+            selectedUserAvatar = emoji;
+            localStorage.setItem('saenuri_user_avatar', emoji);
+
+            // 그리드 버튼 스타일 갱신
+            const btns = document.querySelectorAll('.avatar-emoji-btn');
+            btns.forEach(btn => {
+                const isSelected = btn.dataset.emoji === emoji;
+                btn.style.border = isSelected ? '2.5px solid #059669' : '1px solid #cbd5e1';
+                btn.style.background = isSelected ? '#dcfce7' : '#ffffff';
+                btn.style.transform = isSelected ? 'scale(1.12)' : 'scale(1)';
+                btn.style.boxShadow = isSelected ? '0 2px 6px rgba(5,150,105,0.25)' : '0 1px 2px rgba(0,0,0,0.05)';
+            });
+
+            updateAvatarDisplay(emoji);
+
+            // 🎯 선택 후 0.15초 뒤 목록 자동 접기!
+            setTimeout(() => {
+                toggleAvatarPicker(false);
+            }, 150);
+        }
+
+        function updateAvatarDisplay(emoji) {
+            const currentEmoji = emoji || localStorage.getItem('saenuri_user_avatar') || '👤';
+            const headerAvatar = document.getElementById('header-user-avatar');
+            const previewAvatar = document.getElementById('current-avatar-preview');
+            if (headerAvatar) headerAvatar.textContent = currentEmoji;
+            if (previewAvatar) previewAvatar.textContent = currentEmoji;
+        }
+
+        function updateAiGreetingDisplay(name) {
+            const greetingElem = document.getElementById('ai-greeting-message');
+            const headerNameElem = document.getElementById('header-user-name');
+            const displayName = name || localStorage.getItem('saenuri_user_name') || '성도';
+            const nameWithNim = displayName.endsWith('님') ? displayName : (displayName + ' 님');
+            
+            if (headerNameElem) {
+                headerNameElem.textContent = nameWithNim;
+            }
+            if (greetingElem) {
+                greetingElem.textContent = getAiBlessingGreeting(displayName);
+            }
+            updateAvatarDisplay(localStorage.getItem('saenuri_user_avatar') || '👤');
         }
 
         function closeOrExit() {
@@ -1468,6 +1837,36 @@
             document.documentElement.setAttribute('data-theme', themeName);
         }
 
+        // 🔔 세종새누리교회 감성 커스텀 알림 팝업 제어 함수
+        let customAlertCallback = null;
+        function showAppAlert(msg, title = '안내', icon = '🔔', callback = null) {
+            const modal = document.getElementById('custom-app-alert-modal');
+            const iconElem = document.getElementById('custom-alert-icon');
+            const titleElem = document.getElementById('custom-alert-title');
+            const bodyElem = document.getElementById('custom-alert-body');
+            customAlertCallback = callback;
+
+            if (modal && bodyElem) {
+                if (iconElem) iconElem.textContent = icon;
+                if (titleElem) titleElem.textContent = title;
+                bodyElem.textContent = msg;
+                modal.style.display = 'flex';
+            } else {
+                alert(msg);
+                if (typeof callback === 'function') callback();
+            }
+        }
+
+        function closeAppAlert() {
+            const modal = document.getElementById('custom-app-alert-modal');
+            if (modal) modal.style.display = 'none';
+            if (typeof customAlertCallback === 'function') {
+                const cb = customAlertCallback;
+                customAlertCallback = null;
+                cb();
+            }
+        }
+
         // 👑 사이트 관리자 이메일 목록 (개발자 및 담임목사 계정 지정)
         const ADMIN_EMAILS = ['leeshkr@gmail.com'];
 
@@ -1479,8 +1878,20 @@
         function showTab(tabName) {
             // ⏳ 승인 대기 회원(PENDING) 권한 제어: 마이페이지(mypage) 외 다른 탭 클릭 시 접근 제한 및 안내
             if (currentUserStatus === 'PENDING' && tabName !== 'mypage') {
-                alert('⏳ 성도님의 계정(' + (currentUserEmail || '미승인') + ')은 현재 [승인 대기] 상태입니다.\n\n[마이페이지]에서 환급 계좌 등록은 가능하며,\n관리자의 회원 승인 완료 후 지출요청서 작성이 활성화됩니다.');
+                showAppAlert(
+                    '성도님의 계정(' + (currentUserEmail || '미승인') + ')은 현재 [승인 대기] 상태입니다.\n\n[마이페이지]에서 환급 계좌 등록은 가능하며,\n관리자의 회원 승인 완료 후 지출요청서 작성이 활성화됩니다.',
+                    '승인 대기 안내',
+                    '⏳'
+                );
                 tabName = 'mypage';
+            }
+
+            if (tabName === 'form') {
+                syncAccountToForm();
+            } else if (tabName === 'site_admin') {
+                fetchDepartmentsFromServer();
+                fetchPendingUsersFromServer();
+                fetchApprovedUsersFromServer();
             }
 
             ['form', 'status', 'admin', 'site_admin', 'mypage'].forEach(t => {
@@ -1497,17 +1908,22 @@
         function realLogout() {
             if (confirm('🔒 정말 로그아웃 하시겠습니까?\n(다시 로그인 화면으로 이동합니다)')) {
                 localStorage.removeItem('saenuri_user_email');
+                localStorage.removeItem('saenuri_user_name');
                 localStorage.removeItem('saenuri_user_provider');
                 localStorage.removeItem('saenuri_auto_login');
-                location.href = 'login.html';
+                location.href = 'auth/logout.php';
             }
         }
 
         function syncNameWithHolder(newName) {
+            const cleanName = (newName || '').trim();
             const holderInput = document.getElementById('my-holder-input');
             const formHolderInput = document.getElementById('form-holder-input');
-            if (holderInput) holderInput.value = newName;
-            if (formHolderInput) formHolderInput.value = newName;
+            if (holderInput) holderInput.value = cleanName;
+            if (formHolderInput) formHolderInput.value = cleanName;
+            if (cleanName) {
+                localStorage.setItem('saenuri_default_holder', cleanName);
+            }
         }
 
         function selectThemeOption(themeName) {
@@ -1580,20 +1996,20 @@
 
                     if (tbody) {
                         if (list.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:14px;">현재 대기 중인 승인 요청 성도가 없습니다.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:18px; font-size:13.5px;">✨ 현재 대기 중인 승인 요청 성도가 없습니다.</td></tr>';
                         } else {
                             tbody.innerHTML = list.map(u => `
-                                <tr>
-                                    <td>
-                                        <strong style="color:#0f172a;">${u.name || '성도'}</strong><br>
-                                        <span style="font-size:11.5px; color:#64748b;">${u.email}</span>
+                                <tr style="border-bottom:1px solid #f3e8ff;">
+                                    <td style="text-align:left; padding:10px 12px;">
+                                        <strong style="color:#0f172a; font-size:13.5px;">${u.name || '성도'}</strong>
+                                        <span style="font-size:12px; color:#64748b; margin-left:6px;">(${u.email})</span>
                                     </td>
-                                    <td style="font-size:11.5px; color:#64748b;">${u.created_at || '방금 전'}</td>
-                                    <td>
-                                        <button type="button" onclick="approveUserApi('${u.email}', '${u.name}')" style="background:#7c3aed; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
-                                            ✅ 회원 승인
+                                    <td style="font-size:12px; color:#64748b; text-align:center; padding:10px 8px;">${u.created_at || '방금 전'}</td>
+                                    <td style="text-align:center; padding:10px 8px;">
+                                        <button type="button" onclick="approveUserApi('${u.email}', '${u.name}')" style="background:#7c3aed; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                            ✅ 승인
                                         </button>
-                                        <button type="button" onclick="deleteUserRow('', '${u.name}', '${u.email}')" style="background:#ef4444; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-left:4px;">
+                                        <button type="button" onclick="deleteUserRow('', '${u.name}', '${u.email}')" style="background:#ef4444; color:#fff; border:none; padding:5px 8px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-left:4px;">
                                             🗑️ 삭제
                                         </button>
                                     </td>
@@ -1623,7 +2039,7 @@
                 .catch(err => console.log('Pending fetch completed'));
         }
 
-        // 🌐 서버 API 통신 - 승인 완료된 교인 회원 및 관리자 목록 실시간 조회 및 렌더링
+        // 🌐 서버 API 통신 - 승인 완료된 교인 회원 및 관리자 목록 실시간 조회 및 렌더링 (1줄 최적화)
         function fetchApprovedUsersFromServer() {
             fetch('api/request_action.php?action=get_approved_users')
                 .then(res => res.json())
@@ -1633,23 +2049,25 @@
 
                     if (tbody) {
                         if (list.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b; padding:14px;">현재 승인 완료된 교인 회원이 없습니다.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b; padding:18px; font-size:13.5px;">현재 승인 완료된 교인 회원이 없습니다.</td></tr>';
                         } else {
                             tbody.innerHTML = list.map((u, idx) => `
-                                <tr id="approved-user-row-${idx}">
-                                    <td>
-                                        <strong style="color:#0f172a;">${u.name || '성도'}</strong><br>
-                                        <span style="font-size:11px; color:#64748b;">${u.email || ''}</span>
+                                <tr id="approved-user-row-${idx}" style="border-bottom:1px solid #f1f5f9;">
+                                    <td style="text-align:left; padding:10px 12px; font-weight:700; color:#0f172a; font-size:13.5px; white-space:nowrap;">
+                                        ${u.name || '성도'}
                                     </td>
-                                    <td>
-                                        <div style="display:flex; justify-content:center; align-items:center; gap:4px;">
-                                            <select class="form-control" style="font-size:11.5px; padding:3px 2px; width:78px; display:inline-block;" onchange="changeUserRole('${u.name}', this.value, '${u.email}')">
-                                                <option value="APPLICANT" ${u.role === 'APPLICANT' ? 'selected' : ''}>신청자</option>
-                                                <option value="TREASURER" ${u.role === 'TREASURER' ? 'selected' : ''}>재정부</option>
-                                                <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>관리자</option>
-                                            </select>
-                                            <button type="button" class="btn-danger-sm" onclick="deleteUserRow('approved-user-row-${idx}', '${u.name}', '${u.email}')" style="padding:3px 6px; font-size:11.5px;">삭제</button>
-                                        </div>
+                                    <td style="text-align:left; padding:10px 8px; font-size:12.5px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${u.email || ''}">
+                                        ${u.email || ''}
+                                    </td>
+                                    <td style="text-align:center; padding:10px 6px;">
+                                        <select class="form-control" style="font-size:12px; padding:4px 6px; width:84px; display:inline-block; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc;" onchange="changeUserRole('${u.name}', this.value, '${u.email}')">
+                                            <option value="APPLICANT" ${u.role === 'APPLICANT' ? 'selected' : ''}>신청자</option>
+                                            <option value="TREASURER" ${u.role === 'TREASURER' ? 'selected' : ''}>재정부</option>
+                                            <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>관리자</option>
+                                        </select>
+                                    </td>
+                                    <td style="text-align:center; padding:10px 6px;">
+                                        <button type="button" class="btn-danger-sm" onclick="deleteUserRow('approved-user-row-${idx}', '${u.name}', '${u.email}')" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight:700; cursor:pointer;">삭제</button>
                                     </td>
                                 </tr>
                             `).join('');
@@ -1661,13 +2079,17 @@
                     const tbody = document.getElementById('server-approved-users-table-body');
                     if (tbody) {
                         tbody.innerHTML = `
-                            <tr>
-                                <td><strong style="color:#0f172a;">김태봉 님</strong><br><span style="font-size:11px; color:#64748b;">ktbmks@hanmail.net</span></td>
-                                <td><span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">👑 관리자</span></td>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="text-align:left; padding:10px 12px; font-weight:700; color:#0f172a; font-size:13.5px;">김태봉 목사님</td>
+                                <td style="text-align:left; padding:10px 8px; font-size:12.5px; color:#475569;">ktbmks@hanmail.net</td>
+                                <td style="text-align:center; padding:10px 6px;"><span style="background:#d1fae5; color:#065f46; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">재정부</span></td>
+                                <td style="text-align:center; padding:10px 6px;">-</td>
                             </tr>
-                            <tr>
-                                <td><strong style="color:#0f172a;">이승호 님</strong><br><span style="font-size:11px; color:#64748b;">leeshkr@gmail.com</span></td>
-                                <td><span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">👑 관리자</span></td>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="text-align:left; padding:10px 12px; font-weight:700; color:#0f172a; font-size:13.5px;">이승호 개발자</td>
+                                <td style="text-align:left; padding:10px 8px; font-size:12.5px; color:#475569;">leeshkr@gmail.com</td>
+                                <td style="text-align:center; padding:10px 6px;"><span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">👑 관리자</span></td>
+                                <td style="text-align:center; padding:10px 6px;">-</td>
                             </tr>
                         `;
                     }
@@ -1677,11 +2099,17 @@
         // 🌐 접속 성도의 실시간 서버 승인 여부 및 권한(Role) 검증 UI 즉시 반영 함수
         function syncUserApprovalStatusWithServer(email, userName) {
             if (!email) return;
+            const isAdminEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === email.toLowerCase());
 
             fetch('api/request_action.php?action=check_user_status&email=' + encodeURIComponent(email))
                 .then(res => res.json())
                 .then(resData => {
-                    if (resData.user_status === 'APPROVED') {
+                    if (isAdminEmail) {
+                        currentUserStatus = 'APPROVED';
+                        currentRole = 'ADMIN';
+                        localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
+                        localStorage.setItem('saenuri_user_role_' + email.toLowerCase(), 'ADMIN');
+                    } else if (resData.user_status === 'APPROVED') {
                         currentUserStatus = 'APPROVED';
                         localStorage.setItem('saenuri_user_status_' + email.toLowerCase(), 'APPROVED');
 
@@ -1689,24 +2117,29 @@
                             currentRole = resData.role;
                             localStorage.setItem('saenuri_user_role_' + email.toLowerCase(), resData.role);
                         }
+                    } else {
+                        currentUserStatus = resData.user_status || 'PENDING';
+                    }
 
-                        const pendingBanner = document.getElementById('pending-approval-banner');
-                        const welcomeGuide = document.getElementById('mypage-welcome-guide');
-                        const statusBadge = document.getElementById('user-status-badge');
+                    const pendingBanner = document.getElementById('pending-approval-banner');
+                    const welcomeGuide = document.getElementById('mypage-welcome-guide');
+                    const statusBadge = document.getElementById('user-status-badge');
 
+                    if (currentUserStatus === 'APPROVED') {
                         if (pendingBanner) pendingBanner.style.display = 'none';
                         if (welcomeGuide) welcomeGuide.style.display = 'none';
-                        if (statusBadge) {
-                            statusBadge.textContent = '✅ 승인 완료';
-                            statusBadge.style.cssText = 'font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
-                        }
+                        if (statusBadge) statusBadge.style.display = 'none'; // 승인 완료 시 뱃지 숨김
+                    }
 
-                        if (resData.name) {
-                            localStorage.setItem('saenuri_user_name', resData.name);
-                            const myNameInput = document.getElementById('my-name-input');
-                            if (myNameInput) myNameInput.value = resData.name;
-                        }
-                        let finalName = resData.name ? (resData.name + ' 님') : (userName + ' 님');
+                    if (resData.name) {
+                        localStorage.setItem('saenuri_user_name', resData.name);
+                        const myNameInput = document.getElementById('my-name-input');
+                        if (myNameInput) myNameInput.value = resData.name;
+                    }
+                    let finalName = resData.name ? (resData.name + ' 님') : (userName + ' 님');
+                    if (isAdminEmail) {
+                        switchRole('ADMIN', finalName + ' (사이트 관리자)');
+                    } else {
                         switchRole(currentRole, finalName);
                     }
                 })
@@ -1747,6 +2180,27 @@
                     ? r.items.map(i => `• ${i.item_name || i.name} (${Number(i.amount).toLocaleString()}원)`).join('<br>')
                     : '세부 항목 없음';
 
+                // 🖼️ 영수증 첨부 URL 목록 파싱
+                let rUrls = [];
+                if (r.receipt_urls && Array.isArray(r.receipt_urls) && r.receipt_urls.length > 0) {
+                    rUrls = r.receipt_urls;
+                } else if (r.receipt_url) {
+                    rUrls = [r.receipt_url];
+                }
+
+                const receiptThumbHtml = (rUrls.length > 0) ? `
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+                        <div style="font-size:12px; font-weight:700; color:#047857; margin-bottom:4px;">
+                            🖼️ 첨부된 영수증 증빙 (${rUrls.length}장):
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            ${rUrls.map(u => `
+                                <img src="${u}" alt="영수증" style="width:54px; height:54px; object-fit:cover; border-radius:6px; border:1.5px solid #059669; cursor:zoom-in; box-shadow:0 1px 3px rgba(0,0,0,0.12);" onclick="event.stopPropagation(); openImageZoomModal('${u}');" title="터치 시 원본 사진 확대 보기">
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : '';
+
                 return `
                     <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 12px; background:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor:pointer;" onclick="openDetailModalByDocNo('${r.doc_no || r.id}')">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -1762,6 +2216,7 @@
                             <strong>세부 항목 내역:</strong><br>${itemsSummary}
                         </div>
                         ${r.bank_name ? `<div style="font-size:12px; color:#64748b; margin-top:6px;">💳 입금계좌: ${r.bank_name} ${r.account_number} (예금주: ${r.account_holder})</div>` : ''}
+                        ${receiptThumbHtml}
                     </div>
                 `;
             }).join('');
@@ -1785,6 +2240,23 @@
 
             container.innerHTML = allRequests.map(r => {
                 const statusBadgeHtml = getStatusBadgeHtml(r.status);
+
+                let rUrls = [];
+                if (r.receipt_urls && Array.isArray(r.receipt_urls) && r.receipt_urls.length > 0) {
+                    rUrls = r.receipt_urls;
+                } else if (r.receipt_url) {
+                    rUrls = [r.receipt_url];
+                }
+
+                const receiptThumbHtml = (rUrls.length > 0) ? `
+                    <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <span style="font-size:11.5px; font-weight:700; color:#059669;">🖼️ 영수증(${rUrls.length}장):</span>
+                        ${rUrls.map(u => `
+                            <img src="${u}" alt="영수증" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1; cursor:zoom-in;" onclick="event.stopPropagation(); openImageZoomModal('${u}');" title="터치 시 원본 사진 확대 보기">
+                        `).join('')}
+                    </div>
+                ` : '';
+
                 return `
                     <div class="request-summary-card" style="margin-bottom:10px; display:flex; gap:10px; align-items:flex-start; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:12px;">
                         <input type="checkbox" class="chk-item-batch ${isBatchModeActive ? 'active' : ''}" value="${r.doc_no}" data-amount="${r.total_amount}" data-status="${r.status}" onchange="calcSelectedBatchTotal()" style="width:20px; height:20px; margin-top:4px; accent-color:#2563eb;">
@@ -1799,6 +2271,7 @@
                                 <br>계좌: ${r.bank_name} ${r.account_number} (예금주: ${r.account_holder})
                                 <br><span style="font-size:12px; color:#64748b;">⏱️ 요청시각: ${r.created_at || r.request_date || ''}</span>
                             </div>
+                            ${receiptThumbHtml}
                         </div>
                     </div>
                 `;
@@ -1840,14 +2313,13 @@
         }
 
         function saveMyPageSettings() {
-            const name = document.getElementById('my-name-input').value;
-            const email = document.getElementById('my-email-input').value || currentUserEmail;
+            const name = document.getElementById('my-name-input').value.trim() || '성도';
+            const email = document.getElementById('my-email-input').value.trim() || currentUserEmail;
             const title = '성도';
             const dept = '행정/재정부';
             const bank = getSelectedBankValue('my-bank-select', 'my-bank-direct-input');
-            const account = document.getElementById('my-account-input').value;
-            const holder = document.getElementById('my-holder-input').value;
-            const telegramId = document.getElementById('my-telegram-input')?.value.trim() || '';
+            const account = document.getElementById('my-account-input').value.trim();
+            const holder = document.getElementById('my-holder-input').value.trim() || name;
 
             localStorage.setItem('saenuri_user_name', name);
             if (email) localStorage.setItem('saenuri_user_email', email);
@@ -1856,7 +2328,10 @@
             localStorage.setItem('saenuri_default_bank', bank);
             localStorage.setItem('saenuri_default_account', account);
             localStorage.setItem('saenuri_default_holder', holder);
-            if (telegramId) localStorage.setItem('saenuri_telegram_id', telegramId);
+            localStorage.setItem('saenuri_user_avatar', selectedUserAvatar || '👤');
+
+            updateAiGreetingDisplay(name);
+            updateAvatarDisplay(selectedUserAvatar || '👤');
 
             // 🌐 서버 DB 및 파일 백업 스토리지에 마이페이지 프로필 즉시 갱신!
             if (email) {
@@ -1870,7 +2345,6 @@
                 formData.append('default_bank', bank);
                 formData.append('default_account', account);
                 formData.append('default_holder', holder);
-                formData.append('telegram_id', telegramId);
                 formData.append('preferred_mode', 'onepage');
                 formData.append('preferred_theme', selectedTheme);
                 formData.append('ajax', '1');
@@ -1891,39 +2365,8 @@
                     .catch(err => console.log('MyPage sync completed'));
             }
 
-            addNotification('SYSTEM', '⚙️ 마이페이지 계좌 및 텔레그램 알림 정보가 업데이트되었습니다.');
+            addNotification('SYSTEM', '⚙️ 마이페이지 계좌 및 프로필 정보가 업데이트되었습니다.');
             alert('🎉 마이페이지 계좌 및 프로필 정보가 정상 저장되었습니다!');
-        }
-
-        function saveTelegramId() {
-            const telegramInput = document.getElementById('my-telegram-input');
-            const telegramId = telegramInput ? telegramInput.value.trim() : '';
-            if (!telegramId) {
-                alert('⚠️ 텔레그램 Chat ID 또는 사용자명을 입력해 주세요.');
-                return;
-            }
-            localStorage.setItem('saenuri_telegram_id', telegramId);
-
-            if (currentUserEmail) {
-                const formData = new FormData();
-                formData.append('action', 'update_mypage');
-                formData.append('email', currentUserEmail);
-                formData.append('telegram_id', telegramId);
-                formData.append('ajax', '1');
-                fetch('api/request_action.php', { method: 'POST', body: formData }).catch(e => {});
-            }
-
-            alert('🎉 텔레그램 Chat ID [' + telegramId + ']가 정상 저장되었습니다!\n앞으로 심사 결과 알림이 텔레그램으로 실시간 수신됩니다.');
-        }
-
-        function openTelegramGuideModal() {
-            const guideModal = document.getElementById('telegram-guide-modal');
-            if (guideModal) guideModal.classList.add('active');
-        }
-
-        function closeTelegramGuideModal() {
-            const guideModal = document.getElementById('telegram-guide-modal');
-            if (guideModal) guideModal.classList.remove('active');
         }
 
         function checkPwaModalDisplay() {
@@ -2085,72 +2528,14 @@
             renderNotifications();
         }
 
-        function saveMyPageSettings() {
-            const name = document.getElementById('my-name-input').value;
-            const email = document.getElementById('my-email-input').value || currentUserEmail;
-            const title = '성도';
-            const dept = '행정/재정부';
-            const bank = getSelectedBankValue('my-bank-select', 'my-bank-direct-input');
-            const account = document.getElementById('my-account-input').value;
-            const holder = document.getElementById('my-holder-input').value;
-            const mode = 'onepage';
 
-            localStorage.setItem('saenuri_user_name', name);
-            if (email) localStorage.setItem('saenuri_user_email', email);
-            localStorage.setItem('saenuri_user_theme', selectedTheme);
-            localStorage.setItem('saenuri_user_mode', 'onepage');
-            localStorage.setItem('saenuri_default_bank', bank);
-            localStorage.setItem('saenuri_default_account', account);
-            localStorage.setItem('saenuri_default_holder', holder);
-
-            // 🌐 서버 DB 및 파일 백업 스토리지에 마이페이지 프로필 즉시 갱신!
-            if (email) {
-                const formData = new FormData();
-                formData.append('action', 'update_mypage');
-                formData.append('email', email);
-                formData.append('name', name);
-                formData.append('title_name', title);
-                formData.append('department', dept);
-                formData.append('default_bank', bank);
-                formData.append('default_account', account);
-                formData.append('default_holder', holder);
-                formData.append('preferred_mode', 'onepage');
-                formData.append('preferred_theme', selectedTheme);
-                formData.append('ajax', '1');
-
-                fetch('api/request_action.php', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(() => {
-                        fetchPendingUsersFromServer();
-                        fetchApprovedUsersFromServer();
-                    })
-                    .catch(e => {});
-            }
-
-            document.getElementById('user-name-display').textContent = name + ' 님';
-            const formDeptSelect = document.getElementById('form-dept-select');
-            if (formDeptSelect) formDeptSelect.value = dept;
-            setBankSelectValue('form-bank-select', 'form-bank-direct-input', bank);
-            document.getElementById('form-account-input').value = account;
-            document.getElementById('form-holder-input').value = holder || name;
-
-            renderFormMode('onepage');
-
-            // 👑 사이트 관리자 알림 생성 및 전송!
-            const notifMsg = '🔔 [프로필 갱신] ' + name + ' 성도님 (' + (email || 'sns_user') + ')이 마이페이지 프로필 정보를 업데이트하셨습니다.';
-            addNotification('ADMIN', notifMsg, { email: email || currentUserEmail || 'sns_user@saenuri.kr' });
-
-            alert('🎉 마이페이지 프로필 및 설정이 성공적으로 저장되었습니다!\n[' + name + '] 성도님의 정보가 100% 반영되었습니다.');
-
-            if (currentUserStatus === 'APPROVED') {
-                showTab('form');
-            }
-        }
 
         function switchRoleMode(targetMode) {
             const formTabBtn = document.getElementById('tab-form-btn');
             const statusTabBtn = document.getElementById('tab-status-btn');
             const adminTabBtn = document.getElementById('tab-admin-btn');
+            const batchTabBtn = document.getElementById('tab-batch-btn');
+            const printTabBtn = document.getElementById('tab-print-btn');
             const siteAdminTabBtn = document.getElementById('tab-site-admin-btn');
             const mypageTabBtn = document.getElementById('tab-mypage-btn');
             const badge = document.getElementById('user-role-badge');
@@ -2172,24 +2557,30 @@
                 if (formTabBtn) formTabBtn.style.display = 'inline-block';
                 if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
                 if (adminTabBtn) adminTabBtn.style.display = 'none';
+                if (batchTabBtn) batchTabBtn.style.display = 'none';
+                if (printTabBtn) printTabBtn.style.display = 'none';
                 if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
-                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'none'; // 신청자는 2개 메뉴만 깔끔하게 표시!
                 if (badge) badge.textContent = isUserAdmin ? '(신청자 모드 시뮬레이션)' : '(신청자)';
                 showTab('form');
             } else if (targetMode === 'TREASURER') {
                 if (formTabBtn) formTabBtn.style.display = 'none';
                 if (statusTabBtn) statusTabBtn.style.display = 'none';
                 if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
+                if (batchTabBtn) batchTabBtn.style.display = 'inline-block';
+                if (printTabBtn) printTabBtn.style.display = 'inline-block';
                 if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'none';
-                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'none'; // 1. 마이페이지 버튼 삭제!
                 if (badge) badge.textContent = isUserAdmin ? '(재정부 모드 시뮬레이션)' : '(재정담당자)';
                 showTab('admin');
             } else {
                 if (formTabBtn) formTabBtn.style.display = 'inline-block';
                 if (statusTabBtn) statusTabBtn.style.display = 'inline-block';
                 if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
+                if (batchTabBtn) batchTabBtn.style.display = 'inline-block';
+                if (printTabBtn) printTabBtn.style.display = 'inline-block';
                 if (siteAdminTabBtn) siteAdminTabBtn.style.display = 'inline-block';
-                if (mypageTabBtn) mypageTabBtn.style.display = 'inline-block';
+                if (mypageTabBtn) mypageTabBtn.style.display = 'none';
                 if (badge) badge.textContent = '(👑 사이트 관리자)';
                 showTab('site_admin');
             }
@@ -2198,12 +2589,18 @@
         // 👑 역할별 탭 노출/숨김 및 관리자 테스트 툴바 제어 함수
         function switchRole(role, nameDisplay) {
             currentRole = role;
-            if (nameDisplay) {
-                document.getElementById('user-name-display').textContent = nameDisplay;
-            }
+            const pureName = (nameDisplay || localStorage.getItem('saenuri_user_name') || '성도')
+                .replace(/\s*님.*$/, '')
+                .replace(/\s*성도님.*$/, '')
+                .replace(/\s*\(.*\)$/, '');
+            updateAiGreetingDisplay(pureName);
 
-            const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' || role === 'ADMIN';
+            const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' && role === 'ADMIN';
+            const roleButtonsContainer = document.getElementById('role-switch-buttons');
             const adminTestButtons = document.getElementById('admin-test-mode-buttons');
+            if (roleButtonsContainer) {
+                roleButtonsContainer.style.display = isUserAdmin ? 'flex' : 'none';
+            }
             if (adminTestButtons) {
                 adminTestButtons.style.display = isUserAdmin ? 'inline-flex' : 'none';
             }
@@ -2282,17 +2679,28 @@
             localStorage.setItem('saenuri_title_section_enabled', enabled ? 'true' : 'false');
         }
 
-        // 🔄 관리자 실시간 회원 목록 폴링 타이머
+        // 🔄 재정담당자 & 관리자 실시간 지출요청 및 회원 목록 자동 동기화 폴링 타이머 (3.5초 주기)
         let adminRealtimeTimer = null;
         function startAdminRealtimeSync() {
             if (!adminRealtimeTimer) {
                 adminRealtimeTimer = setInterval(() => {
-                    const isUserAdmin = (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com' || ['ADMIN', 'TREASURER'].includes(currentRole);
-                    if (isUserAdmin) {
+                    const isTreasurerOrAdmin = ['ADMIN', 'TREASURER'].includes(currentRole) || (currentUserEmail || '').toLowerCase() === 'leeshkr@gmail.com';
+                    
+                    // 1. 재정담당자/관리자 화면: 실시간 지출요청 목록 자동 갱신 (일괄 체크박스 조작 중이 아닐 때)
+                    if (isTreasurerOrAdmin) {
+                        if (!isBatchModeActive) {
+                            fetchExpenseRequestsFromServer();
+                        }
                         fetchPendingUsersFromServer();
                         fetchApprovedUsersFromServer();
+                    } else {
+                        // 2. 일반 신청자 화면: 진행 현황 탭을 보고 있을 때 실시간 상태 동기화
+                        const statusSec = document.getElementById('section-status');
+                        if (statusSec && statusSec.style.display !== 'none') {
+                            fetchExpenseRequestsFromServer();
+                        }
                     }
-                }, 5000);
+                }, 3500);
             }
         }
 
@@ -2313,51 +2721,31 @@
                     const kakaoEmail = resData.kakao_email || (isKakaoLinked ? (localStorage.getItem('saenuri_linked_kakao_email_' + cleanEmail) || '') : '');
                     const googleEmail = resData.google_email || (isGoogleLinked ? (localStorage.getItem('saenuri_linked_google_email_' + cleanEmail) || '') : '');
 
-                    container.innerHTML = `
-                        <div style="background:#ffffff; border:1.5px solid #2563eb; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">📧</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#1e3a8a;">자주 사용하는 대표 이메일</strong>
-                                    <div style="font-size:12px; color:#2563eb; font-weight:bold;">${primaryEmail}</div>
-                                </div>
-                            </div>
-                            <span style="background:#dbeafe; color:#1e40af; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">⭐ 대표 계정</span>
-                        </div>
+                    const displayKakaoEmail = (provider === 'kakao') ? cleanEmail : (kakaoEmail || (isKakaoLinked ? '연동 완료' : ''));
+                    const displayGoogleEmail = (provider === 'google') ? cleanEmail : (googleEmail || (isGoogleLinked ? '연동 완료' : ''));
 
-                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">💬</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#0f172a;">Kakao 카카오톡 로그인 계정</strong>
-                                    ${isKakaoLinked ? 
-                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${kakaoEmail || '카카오 듀얼 계정 연동됨'}</div>
-                                         <div style="font-size:11px; color:#64748b;">카카오 듀얼 계정 연동됨</div>` : 
-                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
-                                    }
-                                </div>
+                    container.innerHTML = `
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                <span style="font-size:16px;">💬</span>
+                                <strong style="font-size:13px; color:#0f172a; white-space:nowrap;">카카오톡:</strong>
+                                <span style="font-size:13px; color:#334155; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${isKakaoLinked ? (displayKakaoEmail || '연동 완료') : '미연동'}</span>
                             </div>
                             ${isKakaoLinked ? 
-                                '<span style="background:#fef08a; color:#854d0e; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
-                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">💬 카카오 계정 추가 연동</button>`
+                                '<span style="background:#fef9c3; color:#854d0e; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11.5px; white-space:nowrap; flex-shrink:0;">🟢 연동 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; flex-shrink:0;">💬 계정 추가 연동</button>`
                             }
                         </div>
 
-                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">🌐</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#0f172a;">Google 구글 로그인 계정</strong>
-                                    ${isGoogleLinked ? 
-                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${googleEmail || '구글 듀얼 계정 연동됨'}</div>
-                                         <div style="font-size:11px; color:#64748b;">구글 듀얼 계정 연동됨</div>` : 
-                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
-                                    }
-                                </div>
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                <span style="font-size:16px;">🌐</span>
+                                <strong style="font-size:13px; color:#0f172a; white-space:nowrap;">구글 계정:</strong>
+                                <span style="font-size:13px; color:#334155; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${isGoogleLinked ? (displayGoogleEmail || '연동 완료') : '미연동'}</span>
                             </div>
                             ${isGoogleLinked ? 
-                                '<span style="background:#dcfce7; color:#15803d; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
-                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">🌐 구글 계정 추가 연동</button>`
+                                '<span style="background:#dcfce7; color:#15803d; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11.5px; white-space:nowrap; flex-shrink:0;">🟢 연동 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; flex-shrink:0;">🌐 계정 추가 연동</button>`
                             }
                         </div>
                     `;
@@ -2365,54 +2753,31 @@
                 .catch(() => {
                     const isGoogleLinked = (provider === 'google') || localStorage.getItem('saenuri_linked_google_' + cleanEmail) === 'true';
                     const isKakaoLinked = (provider === 'kakao') || localStorage.getItem('saenuri_linked_kakao_' + cleanEmail) === 'true';
-                    const kakaoEmail = localStorage.getItem('saenuri_linked_kakao_email_' + cleanEmail) || '';
-                    const googleEmail = localStorage.getItem('saenuri_linked_google_email_' + cleanEmail) || '';
+                    const displayKakaoEmail = (provider === 'kakao') ? cleanEmail : (localStorage.getItem('saenuri_linked_kakao_email_' + cleanEmail) || (isKakaoLinked ? '연동 완료' : ''));
+                    const displayGoogleEmail = (provider === 'google') ? cleanEmail : (localStorage.getItem('saenuri_linked_google_email_' + cleanEmail) || (isGoogleLinked ? '연동 완료' : ''));
 
                     container.innerHTML = `
-                        <div style="background:#ffffff; border:1.5px solid #2563eb; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">📧</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#1e3a8a;">자주 사용하는 대표 이메일</strong>
-                                    <div style="font-size:12px; color:#2563eb; font-weight:bold;">${cleanEmail}</div>
-                                </div>
-                            </div>
-                            <span style="background:#dbeafe; color:#1e40af; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">⭐ 대표 계정</span>
-                        </div>
-
-                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">💬</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#0f172a;">Kakao 카카오톡 로그인 계정</strong>
-                                    ${isKakaoLinked ? 
-                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${kakaoEmail || '연동 완료'}</div>
-                                         <div style="font-size:11px; color:#64748b;">카카오 듀얼 계정 연동됨</div>` : 
-                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
-                                    }
-                                </div>
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                <span style="font-size:16px;">💬</span>
+                                <strong style="font-size:13px; color:#0f172a; white-space:nowrap;">카카오톡:</strong>
+                                <span style="font-size:13px; color:#334155; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${isKakaoLinked ? (displayKakaoEmail || '연동 완료') : '미연동'}</span>
                             </div>
                             ${isKakaoLinked ? 
-                                '<span style="background:#fef08a; color:#854d0e; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
-                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">💬 카카오 계정 추가 연동</button>`
+                                '<span style="background:#fef9c3; color:#854d0e; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11.5px; white-space:nowrap; flex-shrink:0;">🟢 연동 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('kakao')" style="background:#fee500; color:#3c1e1e; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; flex-shrink:0;">💬 계정 추가 연동</button>`
                             }
                         </div>
 
-                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:20px;">🌐</span>
-                                <div>
-                                    <strong style="font-size:13.5px; color:#0f172a;">Google 구글 로그인 계정</strong>
-                                    ${isGoogleLinked ? 
-                                        `<div style="font-size:12px; color:#2563eb; font-weight:bold; margin-top:2px;">${googleEmail || '연동 완료'}</div>
-                                         <div style="font-size:11px; color:#64748b;">구글 듀얼 계정 연동됨</div>` : 
-                                        `<div style="font-size:11.5px; color:#64748b;">미연동 계정</div>`
-                                    }
-                                </div>
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                <span style="font-size:16px;">🌐</span>
+                                <strong style="font-size:13px; color:#0f172a; white-space:nowrap;">구글 계정:</strong>
+                                <span style="font-size:13px; color:#334155; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${isGoogleLinked ? (displayGoogleEmail || '연동 완료') : '미연동'}</span>
                             </div>
                             ${isGoogleLinked ? 
-                                '<span style="background:#dcfce7; color:#15803d; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:12px;">🟢 1인 통합 완료</span>' : 
-                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">🌐 구글 계정 추가 연동</button>`
+                                '<span style="background:#dcfce7; color:#15803d; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11.5px; white-space:nowrap; flex-shrink:0;">🟢 연동 완료</span>' : 
+                                `<button type="button" onclick="linkSocialAccount('google')" style="background:#4285f4; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; flex-shrink:0;">🌐 계정 추가 연동</button>`
                             }
                         </div>
                     `;
@@ -2488,11 +2853,15 @@
             if (isAdminEmail) {
                 currentRole = 'ADMIN';
                 currentUserStatus = 'APPROVED';
+                if (currentUserEmail) {
+                    localStorage.setItem('saenuri_user_role_' + currentUserEmail.toLowerCase(), 'ADMIN');
+                    localStorage.setItem('saenuri_user_status_' + currentUserEmail.toLowerCase(), 'APPROVED');
+                }
             } else if (savedApprovalStatus === 'APPROVED') {
-                currentRole = savedUserRole || paramRole || 'APPLICANT';
+                currentRole = paramRole || savedUserRole || 'APPLICANT';
                 currentUserStatus = 'APPROVED';
             } else {
-                currentRole = savedUserRole || paramRole || 'APPLICANT';
+                currentRole = paramRole || savedUserRole || 'APPLICANT';
                 currentUserStatus = paramStatus || 'PENDING';
             }
 
@@ -2503,7 +2872,11 @@
             });
 
             // 사용자 이름 및 이메일 자동 채우기
+            if (paramName) {
+                localStorage.setItem('saenuri_user_name', paramName);
+            }
             const userName = localStorage.getItem('saenuri_user_name') || paramName || '성도';
+            updateAiGreetingDisplay(userName);
 
             // 🔔 실제 신규 승인대기 성도일 경우 사이트 관리자 알림함에 자동 등록!
             if (!isAdminEmail && currentUserStatus === 'PENDING' && currentUserEmail) {
@@ -2522,6 +2895,7 @@
                 if (pendingBanner) pendingBanner.style.display = 'block';
                 if (welcomeGuide) welcomeGuide.style.display = 'block';
                 if (statusBadge) {
+                    statusBadge.style.display = 'inline-block';
                     statusBadge.textContent = '⏳ 승인 대기';
                     statusBadge.style.cssText = 'font-size:12px; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
                 }
@@ -2529,8 +2903,7 @@
                 if (pendingBanner) pendingBanner.style.display = 'none';
                 if (welcomeGuide) welcomeGuide.style.display = 'none';
                 if (statusBadge) {
-                    statusBadge.textContent = '✅ 승인 완료';
-                    statusBadge.style.cssText = 'font-size:12px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:4px;';
+                    statusBadge.style.display = 'none'; // 승인 완료 시 뱃지 숨김
                 }
             }
 
@@ -2559,21 +2932,26 @@
 
             if (myNameInput) myNameInput.value = userName;
             if (myEmailInput) myEmailInput.value = currentUserEmail || '';
-            if (myHolderInput && !myHolderInput.value) myHolderInput.value = userName;
+            if (myHolderInput) myHolderInput.value = userName;
+            const formHolderInput = document.getElementById('form-holder-input');
+            if (formHolderInput) formHolderInput.value = userName;
+            localStorage.setItem('saenuri_default_holder', userName);
 
             // 계좌/은행 저장된 설정 불러오기
             const savedBank = localStorage.getItem('saenuri_default_bank');
             const savedAccount = localStorage.getItem('saenuri_default_account');
-            const savedHolder = localStorage.getItem('saenuri_default_holder');
-            const savedTelegram = localStorage.getItem('saenuri_telegram_id');
-            const myTelegramInput = document.getElementById('my-telegram-input');
             if (savedBank) {
                 setBankSelectValue('my-bank-select', 'my-bank-direct-input', savedBank);
                 setBankSelectValue('form-bank-select', 'form-bank-direct-input', savedBank);
             }
             if (savedAccount && myAccountInput) myAccountInput.value = savedAccount;
-            if (savedHolder && myHolderInput) myHolderInput.value = savedHolder;
-            if (savedTelegram && myTelegramInput) myTelegramInput.value = savedTelegram;
+            if (savedAccount) {
+                const formAcc = document.getElementById('form-account-input');
+                if (formAcc) formAcc.value = savedAccount;
+            }
+
+            initAvatarPicker(); // 🎨 귀여운 이모티콘 아바타 선택기 초기화!
+            updateAiGreetingDisplay(userName);
 
             // 사역 부서 전역 동기화 (서버 DB/스토리지 및 로컬 스토리지 불러오기)
             fetchDepartmentsFromServer();
@@ -2590,7 +2968,11 @@
                 showTab('mypage'); // 마이페이지로 즉시 자동 이동!
 
                 if (isFreshLogin) {
-                    alert('✨ [신규 성도님 소셜 로그인 안내]\n\n계정(' + (currentUserEmail || '소셜 계정') + ')으로 접속되었습니다!\n\n[마이페이지]에서 성함, 주로 사용하는 이메일, 자주 쓰는 환급 계좌 정보를 확인하고 [저장하기]를 누르시면 사이트 관리자에게 승인 알림이 발송됩니다.');
+                    showAppAlert(
+                        '계정(' + (currentUserEmail || '소셜 계정') + ')으로 접속되었습니다!\n\n[마이페이지]에서 성함, 주로 사용하는 이메일, 자주 쓰는 환급 계좌 정보를 확인하고 [저장하기]를 누르시면 사이트 관리자에게 승인 알림이 발송됩니다.',
+                        '소셜 로그인 환영',
+                        '✨'
+                    );
                 }
             } else {
                 switchRole(currentRole, userName + ' 성도님');
