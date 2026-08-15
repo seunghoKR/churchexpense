@@ -22,11 +22,11 @@
     {
         "id": 4,
         "email": "leeshkr@kakao.com",
-        "name": "카카오 성도",
+        "name": "이승호",
         "department": "청년부",
         "title_name": "성도",
         "role": "APPLICANT",
-        "status": "PENDING",
+        "status": "APPROVED",
         "created_at": "2026-08-15 22:09:13"
     }
 ]

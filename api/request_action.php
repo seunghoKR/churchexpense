@@ -752,7 +752,7 @@ function handleGetPendingUsers() {
     exit;
 }
 
-// 👑 회원 승인 처리 API
+// 👑 회원 승인 처리 API (DB/파일 갱신 + 카카오톡 승인 환영 알림 메시지 즉시 발송!)
 function handleApproveUserApi() {
     header('Content-Type: application/json; charset=utf-8');
     $email = strtolower(trim($_POST['email'] ?? $_GET['email'] ?? ''));
@@ -762,9 +762,18 @@ function handleApproveUserApi() {
         exit;
     }
 
+    $userName = '성도';
     $pdo = getDbConnection();
     if ($pdo) {
         try {
+            // 회원 이름 조회
+            $stmtN = $pdo->prepare("SELECT name FROM z_ch_saenuri_users WHERE LOWER(email) = ? LIMIT 1");
+            $stmtN->execute([$email]);
+            $uRow = $stmtN->fetch(PDO::FETCH_ASSOC);
+            if (!empty($uRow['name'])) {
+                $userName = $uRow['name'];
+            }
+
             $stmt = $pdo->prepare("UPDATE z_ch_saenuri_users SET status = 'APPROVED', role = 'APPLICANT' WHERE LOWER(email) = ?");
             $stmt->execute([$email]);
         } catch (Exception $e) {}
@@ -778,6 +787,9 @@ function handleApproveUserApi() {
     foreach ($fileData as &$fUser) {
         if (strtolower($fUser['email'] ?? '') === $email) {
             $fUser['status'] = 'APPROVED';
+            if (!empty($fUser['name']) && $userName === '성도') {
+                $userName = $fUser['name'];
+            }
             $found = true;
             break;
         }
@@ -786,7 +798,7 @@ function handleApproveUserApi() {
         $fileData[] = [
             'id' => time(),
             'email' => $email,
-            'name' => '성도님',
+            'name' => $userName,
             'department' => '청년부',
             'title_name' => '성도',
             'status' => 'APPROVED',
@@ -795,7 +807,16 @@ function handleApproveUserApi() {
     }
     file_put_contents($logFile, json_encode($fileData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
-    echo json_encode(['status' => 'success', 'message' => $email . ' 계정 승인이 완료되었습니다.']);
+    // 💬 카카오톡 회원 승인 환영 알림 메시지 발송!
+    $kakaoTitle = "🎉 [세종새누리교회] 회원 가입 승인 완료 안내";
+    $kakaoDesc = sprintf(
+        "🌿 %s 성도님, 주님의 이름으로 환영합니다!\n\n교회 스마트 비용지출요청시스템의 정회원으로 승인되었습니다.\n\n이제 모바일에서 편리하게 지출요청서를 작성하고 제출하실 수 있습니다.\n\n• 가입 계정: %s\n• 권한: 정회원 (지출요청서 작성 가능)",
+        $userName,
+        $email
+    );
+    sendKakaoNotification($email, $kakaoTitle, $kakaoDesc, 'https://expense.sjsnr.kr/');
+
+    echo json_encode(['status' => 'success', 'message' => $email . ' 계정 승인 및 환영 카톡 발송이 완료되었습니다.']);
     exit;
 }
 
@@ -982,7 +1003,9 @@ function handleGetApprovedUsers() {
                 foreach ($approvedList as &$pUser) {
                     if (strtolower($pUser['email'] ?? '') === $fEmail) {
                         $alreadyInList = true;
-                        if (!empty($fUser['name'])) $pUser['name'] = $fUser['name'];
+                        if (empty($pUser['name']) || $pUser['name'] === '성도님' || $pUser['name'] === '카카오 성도') {
+                            if (!empty($fUser['name'])) $pUser['name'] = $fUser['name'];
+                        }
                         if (!empty($fUser['title_name'])) $pUser['title_name'] = $fUser['title_name'];
                         if (!empty($fUser['department'])) $pUser['department'] = $fUser['department'];
                         if (!empty($fUser['role'])) $pUser['role'] = $fUser['role'];
