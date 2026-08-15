@@ -171,6 +171,44 @@ if (!$code) {
         );
         file_put_contents(__DIR__ . '/login_debug.log', $logMessage, FILE_APPEND);
 
+        // 🌿 신규/미승인(PENDING) 성도 로그인 시 카카오톡 가입 환영 및 승인 대기 안내 메시지 즉시 발송!
+        if ($status === 'PENDING' && !empty($accessToken)) {
+            $welcomeTitle = "🌿 [세종새누리교회] 회원가입을 환영합니다!";
+            $welcomeDesc = sprintf(
+                "%s 성도님, 주님의 이름으로 환영합니다! ✨\n\n교회 스마트 비용지출요청시스템에 성공적으로 등록되었습니다.\n\n현재 성도님의 계정은 [관리자 승인 대기] 상태입니다.\n관리자의 교인 확인 및 승인이 완료되면 지출요청서 작성이 활성화되며 카카오톡으로 승인 완료 알림을 보내드립니다.\n\n• 가입 계정: %s\n• 상태: 승인 대기 중 (마이페이지에서 환급 계좌 사전 등록 가능)",
+                $nickname,
+                $email
+            );
+
+            // 카카오톡 '나에게 보내기' API 즉시 발송
+            $templateObject = [
+                'object_type' => 'text',
+                'text' => $welcomeTitle . "\n\n" . $welcomeDesc,
+                'link' => [
+                    'web_url' => 'https://expense.sjsnr.kr/',
+                    'mobile_web_url' => 'https://expense.sjsnr.kr/'
+                ],
+                'button_title' => '스마트 지출요청서 열기'
+            ];
+
+            $chMsg = curl_init();
+            curl_setopt($chMsg, CURLOPT_URL, "https://kapi.kakao.com/v2/api/talk/memo/default/send");
+            curl_setopt($chMsg, CURLOPT_POST, true);
+            curl_setopt($chMsg, CURLOPT_POSTFIELDS, http_build_query([
+                'template_object' => json_encode($templateObject, JSON_UNESCAPED_UNICODE)
+            ]));
+            curl_setopt($chMsg, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($chMsg, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $accessToken,
+                'Content-Type: application/x-www-form-urlencoded;charset=utf-8'
+            ]);
+            curl_setopt($chMsg, CURLOPT_SSL_VERIFYPEER, false);
+            $msgResp = curl_exec($chMsg);
+            curl_close($chMsg);
+
+            file_put_contents(__DIR__ . '/login_debug.log', sprintf("[%s] Kakao Welcome Msg to %s: %s\n", date('Y-m-d H:i:s'), $email, $msgResp), FILE_APPEND);
+        }
+
         $_SESSION['user'] = [
             'id' => $kakaoId,
             'name' => $nickname,
